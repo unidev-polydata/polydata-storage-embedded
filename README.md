@@ -2,6 +2,12 @@
 
 SQLite storage for polydata records
 
+Usage
+
+```
+compile 'com.unidev.polydata:polydata-storage-sqlite:2.0.0-SNAPSHOT'
+```
+
 License
 =======
  
