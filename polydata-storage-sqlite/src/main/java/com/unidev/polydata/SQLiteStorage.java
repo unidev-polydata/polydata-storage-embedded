@@ -4,12 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.unidev.polydata.domain.BasicPoly;
 import com.unidev.polydata.domain.Poly;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.io.IOException;
+import java.sql.*;
+import java.util.Optional;
 
 /**
  * Named polydata storage,
@@ -46,6 +46,21 @@ public class SQLiteStorage {
             throw new SQLiteStorageException(e);
         }
         return this;
+    }
+
+    public Optional<Poly> fetch(String polyName, String id) {
+        try (Connection connection = openDb()){
+            ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM " + polyName + " WHERE id = '" + id + "' ;");
+            if (!resultSet.next()) {
+                return Optional.empty();
+            }
+            String rawJson = resultSet.getObject("json") + "";
+            return Optional.of(DB_OBJECT_MAPPER.readValue(rawJson, BasicPoly.class));
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
+        }
+
+        return Optional.empty();
     }
 
     protected void createDB(String name) {
