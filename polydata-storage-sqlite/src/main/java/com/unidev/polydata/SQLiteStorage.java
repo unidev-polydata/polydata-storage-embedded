@@ -38,6 +38,11 @@ public class SQLiteStorage {
 
     public SQLiteStorage save(String polyName, Poly poly) throws SQLiteStorageException {
         createDB(polyName);
+
+        if (fetch(polyName, poly._id()).isPresent()) {
+            return this;
+        }
+
         try(Connection connection = openDb()) {
             String json = DB_OBJECT_MAPPER.writeValueAsString(poly);
             Statement statement = connection.createStatement();
@@ -63,10 +68,11 @@ public class SQLiteStorage {
         return Optional.empty();
     }
 
+
     protected void createDB(String name) {
         try (Connection connection = openDb()) {
             Statement statement = connection.createStatement();
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS "+name+" (id TEXT, json JSON)");
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS "+name+" (id TEXT PRIMARY KEY, json JSON)");
         } catch (SQLException e) {
             e.printStackTrace();
         }
