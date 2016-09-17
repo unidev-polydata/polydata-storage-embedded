@@ -51,7 +51,7 @@ public class SQLiteTest {
         }
 
         System.out.println("***Json query***");
-        rs = statement.executeQuery("select * from poly");
+        rs = statement.executeQuery("select poly.json from poly;");
         while(rs.next())
         {
 
