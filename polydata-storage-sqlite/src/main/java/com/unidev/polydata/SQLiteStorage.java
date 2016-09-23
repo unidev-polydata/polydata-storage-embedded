@@ -9,6 +9,7 @@ import com.unidev.polydata.domain.Poly;
 
 import java.io.IOException;
 import java.sql.*;
+import java.util.Collection;
 import java.util.Optional;
 
 /**
@@ -29,7 +30,7 @@ public class SQLiteStorage {
             e.printStackTrace();
         }
     }
-
+    private Collection<SQLitePolyMigrator> polyMigrators;
     private String dbFile;
 
     public SQLiteStorage(String dbFile) {
@@ -59,6 +60,7 @@ public class SQLiteStorage {
             if (!resultSet.next()) {
                 return Optional.empty();
             }
+
             String rawJson = resultSet.getObject("json") + "";
             return Optional.of(DB_OBJECT_MAPPER.readValue(rawJson, BasicPoly.class));
         } catch (SQLException | IOException e) {
@@ -81,5 +83,13 @@ public class SQLiteStorage {
 
     public Connection openDb() throws SQLException {
         return DriverManager.getConnection("jdbc:sqlite:" + dbFile);
+    }
+
+    public Collection<SQLitePolyMigrator> getPolyMigrators() {
+        return polyMigrators;
+    }
+
+    public void setPolyMigrators(Collection<SQLitePolyMigrator> polyMigrators) {
+        this.polyMigrators = polyMigrators;
     }
 }
