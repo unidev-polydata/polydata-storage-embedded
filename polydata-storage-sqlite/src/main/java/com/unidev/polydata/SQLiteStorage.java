@@ -80,6 +80,20 @@ public class SQLiteStorage {
         return Optional.empty();
     }
 
+    public void remove(String polyName, String id) throws SQLiteStorageException {
+        try (Connection connection = openDb()) {
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + polyName + " WHERE _id = ?");
+            preparedStatement.setObject(1, id);
+            preparedStatement.execute();
+        } catch (SQLException e) {
+            throw new SQLiteStorageException(e);
+        }
+    }
+
+    public List<BasicPoly> evaluateStatement(PreparedStatement preparedStatement) {
+
+    }
+
 
     protected void createDB(String name) throws SQLiteStorageException {
 
