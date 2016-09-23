@@ -1,13 +1,8 @@
 package com.unidev.polydata;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.unidev.polydata.domain.BasicPoly;
 import com.unidev.polydata.domain.Poly;
 
-import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -86,14 +81,16 @@ public class SQLiteStorage {
     }
 
 
-    protected void createDB(String name) {
-        try (Connection connection = openDb()) {
-            Statement statement = connection.createStatement();
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS "+name+" (_id TEXT PRIMARY KEY, json JSON)");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    protected void createDB(String name) throws SQLiteStorageException {
 
+        Optional<SQLitePolyMigrator> migrator = polyMigrators.stream().filter(m -> m.canHandle(name)).findFirst();
+        migrator.orElseThrow(SQLiteStorageException::new);
+
+        try (Connection connection = openDb()) {
+            migrator.get().handle(name, connection);
+        } catch (SQLException e) {
+            throw new SQLiteStorageException(e);
+        }
     }
 
     public Connection openDb() throws SQLException {
