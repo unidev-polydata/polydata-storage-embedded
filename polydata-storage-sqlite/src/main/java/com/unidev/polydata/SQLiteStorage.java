@@ -46,8 +46,8 @@ public class SQLiteStorage {
 
         try(Connection connection = openDb()) {
             String json = DB_OBJECT_MAPPER.writeValueAsString(poly);
+            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + polyName + " VALUES ('" + poly._id() + "', '" + json + "')");
             Statement statement = connection.createStatement();
-            statement.executeUpdate("INSERT INTO "+polyName+" VALUES ('"+poly._id()+"', '"+json+"')");
         } catch (JsonProcessingException | SQLException e) {
             throw new SQLiteStorageException(e);
         }
@@ -56,14 +56,19 @@ public class SQLiteStorage {
 
     public Optional<Poly> fetch(String polyName, String id) {
         try (Connection connection = openDb()){
-            ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM " + polyName + " WHERE id = '" + id + "' ;");
+            ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM " + polyName + " WHERE _id = '" + id + "' ;");
             if (!resultSet.next()) {
                 return Optional.empty();
             }
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            BasicPoly result = new BasicPoly();
 
-            String rawJson = resultSet.getObject("json") + "";
-            return Optional.of(DB_OBJECT_MAPPER.readValue(rawJson, BasicPoly.class));
-        } catch (SQLException | IOException e) {
+            for(int column = 1;column <= metaData.getColumnCount(); column++) {
+                String columnName = metaData.getColumnName(column);
+                result.put(columnName, resultSet.getObject(columnName));
+            }
+            return Optional.of(result);
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
@@ -74,7 +79,7 @@ public class SQLiteStorage {
     protected void createDB(String name) {
         try (Connection connection = openDb()) {
             Statement statement = connection.createStatement();
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS "+name+" (id TEXT PRIMARY KEY, json JSON)");
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS "+name+" (_id TEXT PRIMARY KEY, json JSON)");
         } catch (SQLException e) {
             e.printStackTrace();
         }

@@ -43,6 +43,7 @@ public class SQLiteTest {
 
         statement.executeUpdate("insert into poly values('tomato', '"+rawJson+"' )");
         ResultSet rs = statement.executeQuery("select * from poly");
+        //rs.getMetaData().getColumn
         while(rs.next())
         {
             // read the result set
