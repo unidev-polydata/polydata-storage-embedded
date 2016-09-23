@@ -9,7 +9,9 @@ import com.unidev.polydata.domain.Poly;
 
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -17,11 +19,6 @@ import java.util.Optional;
  * Each poly storage will be dedicated table
  */
 public class SQLiteStorage {
-
-    public static ObjectMapper DB_OBJECT_MAPPER = new ObjectMapper() {{
-        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-    }};
 
     static {
         try {
@@ -45,10 +42,23 @@ public class SQLiteStorage {
         }
 
         try(Connection connection = openDb()) {
-            String json = DB_OBJECT_MAPPER.writeValueAsString(poly);
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + polyName + " VALUES ('" + poly._id() + "', '" + json + "')");
-            Statement statement = connection.createStatement();
-        } catch (JsonProcessingException | SQLException e) {
+            List<String> keys = new ArrayList<>();
+            List<Object> values = new ArrayList<>();
+            List<String> qmarks = new ArrayList<>();
+            poly.forEach( (k,v) -> {
+                keys.add(k);
+                values.add(v);
+                qmarks.add("?");
+            });
+            PreparedStatement preparedStatement = connection.prepareStatement(
+                            "INSERT INTO " + polyName +
+                                    "(" + String.join(",", keys) +")" +
+                            " VALUES ( " + String.join(",", qmarks) + " )");
+            for(int id = 0;id<values.size();id++) {
+                preparedStatement.setObject(id +1, values.get(id));
+            }
+            preparedStatement.execute();
+        } catch (SQLException e) {
             throw new SQLiteStorageException(e);
         }
         return this;
