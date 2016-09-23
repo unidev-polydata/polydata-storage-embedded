@@ -9,6 +9,10 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -20,6 +24,22 @@ public class SQLiteStorageTest {
     public void testStorageSaveLoad() throws SQLiteStorageException {
 
         SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
+        sqLiteStorage.setPolyMigrators(Arrays.asList(new SQLitePolyMigrator() {
+            @Override
+            public boolean canHandle(String poly) {
+                return "poly".equalsIgnoreCase(poly);
+            }
+
+            @Override
+            public void handle(String poly, Connection connection) throws SQLiteStorageException {
+                try {
+                    Statement statement = connection.createStatement();
+                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS "+poly+" (_id TEXT PRIMARY KEY, value TEXT)");
+                } catch (SQLException e) {
+                    throw new SQLiteStorageException(e);
+                }
+            }
+        }));
 
         BasicPoly basicPoly = BasicPoly.newPoly("potato");
         basicPoly.put("value", "tomato");
