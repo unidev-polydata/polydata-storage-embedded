@@ -29,11 +29,20 @@ public class SQLiteStorage {
         this.dbFile = dbFile;
     }
 
+    /**
+     * Persist poly into storage
+     * @param polyName
+     * @param poly
+     * @return
+     * @throws SQLiteStorageException
+     */
     public SQLiteStorage save(String polyName, Poly poly) throws SQLiteStorageException {
         createDB(polyName);
 
+        boolean update = false;
+
         if (fetch(polyName, poly._id()).isPresent()) {
-            return this;
+            update = true;
         }
 
         try(Connection connection = openDb()) {
@@ -45,13 +54,33 @@ public class SQLiteStorage {
                 values.add(v);
                 qmarks.add("?");
             });
-            PreparedStatement preparedStatement = connection.prepareStatement(
-                            "INSERT INTO " + polyName +
-                                    "(" + String.join(",", keys) +")" +
-                            " VALUES ( " + String.join(",", qmarks) + " )");
-            for(int id = 0;id<values.size();id++) {
-                preparedStatement.setObject(id +1, values.get(id));
+            PreparedStatement preparedStatement;
+            if (update) {
+                preparedStatement = null;
+
+                List<String> setValues = new ArrayList<>();
+                keys.forEach( key -> { setValues.add(key + " = ?"); });
+
+                connection.prepareStatement(
+                        "UPDATE " + polyName + "SET "
+                                + String.join(",", setValues)
+                                + " WHERE _id = ?");
+
+                for(int id = 0;id<values.size();id++) {
+                    preparedStatement.setObject(id +1, values.get(id));
+                }
+                preparedStatement.setObject(values.size() +1 , poly._id());
+            } else {
+                 preparedStatement = connection.prepareStatement(
+                        "INSERT INTO " + polyName +
+                                "(" + String.join(",", keys) +")" +
+                                " VALUES ( " + String.join(",", qmarks) + " )");
+                for(int id = 0;id<values.size();id++) {
+                    preparedStatement.setObject(id +1, values.get(id));
+                }
             }
+
+
             preparedStatement.execute();
         } catch (SQLException e) {
             throw new SQLiteStorageException(e);
@@ -59,6 +88,12 @@ public class SQLiteStorage {
         return this;
     }
 
+    /**
+     * Fetch poly by id
+     * @param polyName
+     * @param id
+     * @return
+     */
     public Optional<Poly> fetch(String polyName, String id) {
         try (Connection connection = openDb()){
             ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM " + polyName + " WHERE _id = '" + id + "' ;");
@@ -90,8 +125,30 @@ public class SQLiteStorage {
         }
     }
 
-    public List<BasicPoly> evaluateStatement(PreparedStatement preparedStatement) {
+    public List<BasicPoly> evaluateStatement(PreparedStatement preparedStatement) throws SQLiteStorageException {
 
+        try {
+            ResultSet resultSet = preparedStatement.executeQuery();
+            List<BasicPoly> result = new ArrayList<>();
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            List<String> keys = new ArrayList<>();
+            for(int column = 1;column <= metaData.getColumnCount(); column++) {
+                String columnName = metaData.getColumnName(column);
+                keys.add(columnName);
+            }
+
+            while(resultSet.next()) {
+                BasicPoly basicPoly = new BasicPoly();
+                for(String key : keys) {
+                    basicPoly.put(key, resultSet.getObject(key));
+                }
+                result.add(basicPoly);
+            }
+
+            return result;
+        } catch (SQLException e) {
+            throw new SQLiteStorageException(e);
+        }
     }
 
 
