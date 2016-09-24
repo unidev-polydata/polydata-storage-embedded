@@ -12,10 +12,13 @@ import static org.hamcrest.Matchers.nullValue;
 
 import java.io.File;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 /**
  * SQLite storage tests
@@ -110,6 +113,48 @@ public class SQLiteStorageTest {
 
         fetch = sqLiteStorage.fetch("poly", "potato");
         assertThat(fetch.isPresent(), is(false));
+
+    }
+
+    @Test
+    public void testStatementEvaluation() throws SQLiteStorageException, SQLException {
+        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
+        sqLiteStorage.setPolyMigrators(Arrays.asList(migrator));
+
+        for(int i = 1;i<=10;i++) {
+            BasicPoly basicPoly = BasicPoly.newPoly("record_" + i);
+            basicPoly.put("value", "" + new Random().nextLong());
+            sqLiteStorage.save("poly", basicPoly);
+        }
+
+        try (Connection connection = sqLiteStorage.openDb()) {
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM poly;");
+
+            List<BasicPoly> polyList = sqLiteStorage.evaluateStatement(statement);
+
+            assertThat(polyList, not(nullValue()));
+            assertThat(polyList.size(), is(10));
+
+
+            statement = connection.prepareStatement("SELECT _id FROM poly WHERE _id = 'record_3' ");
+            polyList = sqLiteStorage.evaluateStatement(statement);
+
+            assertThat(polyList, not(nullValue()));
+            assertThat(polyList.size(), is(1));
+
+            BasicPoly basicPoly = polyList.get(0);
+
+            assertThat(basicPoly.size(), is(1));
+            assertThat(basicPoly._id(), is("record_3"));
+
+
+            statement = connection.prepareStatement("SELECT _id FROM poly WHERE _id = 'record_666' ");
+            polyList = sqLiteStorage.evaluateStatement(statement);
+
+            assertThat(polyList, not(nullValue()));
+            assertThat(polyList.size(), is(0));
+        }
+
 
     }
 
