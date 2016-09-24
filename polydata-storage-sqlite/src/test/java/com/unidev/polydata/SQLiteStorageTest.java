@@ -53,7 +53,6 @@ public class SQLiteStorageTest {
         BasicPoly basicPoly = BasicPoly.newPoly("potato");
         basicPoly.put("value", "tomato");
 
-
         sqLiteStorage.save("poly", basicPoly);
 
         Optional<BasicPoly> polyOptional = sqLiteStorage.fetch("poly", "potato");
@@ -89,6 +88,28 @@ public class SQLiteStorageTest {
         poly = sqLiteStorage.fetch("poly", "potato").get();
         assertThat(poly.get("value"), is("another potato"));
 
+    }
+
+    @Test
+    public void testPolyRemoval() throws SQLiteStorageException {
+
+        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
+        sqLiteStorage.setPolyMigrators(Arrays.asList(migrator));
+
+        BasicPoly basicPoly = BasicPoly.newPoly("potato");
+        basicPoly.put("value", "tomato");
+
+        Optional<BasicPoly> fetch;
+
+        sqLiteStorage.save("poly", basicPoly);
+
+        fetch = sqLiteStorage.fetch("poly", "potato");
+        assertThat(fetch.isPresent(), is(true));
+
+        sqLiteStorage.remove("poly", "potato");
+
+        fetch = sqLiteStorage.fetch("poly", "potato");
+        assertThat(fetch.isPresent(), is(false));
 
     }
 
