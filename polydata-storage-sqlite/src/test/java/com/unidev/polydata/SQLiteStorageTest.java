@@ -2,6 +2,7 @@ package com.unidev.polydata;
 
 import com.unidev.polydata.domain.BasicPoly;
 import com.unidev.polydata.domain.Poly;
+import org.junit.Before;
 import org.junit.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -9,6 +10,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -37,6 +39,11 @@ public class SQLiteStorageTest {
         }
     };
 
+    @Before
+    public void setup() {
+        new File("/tmp/testdb.db").delete();
+    }
+
     @Test
     public void testStorageSaveLoad() throws SQLiteStorageException {
 
@@ -49,7 +56,7 @@ public class SQLiteStorageTest {
 
         sqLiteStorage.save("poly", basicPoly);
 
-        Optional<Poly> polyOptional = sqLiteStorage.fetch("poly", "potato");
+        Optional<BasicPoly> polyOptional = sqLiteStorage.fetch("poly", "potato");
         assertThat(polyOptional.isPresent(), is(true));
 
         Poly poly = polyOptional.get();
@@ -57,8 +64,32 @@ public class SQLiteStorageTest {
         assertThat(poly.get("value"), is("tomato"));
 
 
-        Optional<Poly> polyOptional2 = sqLiteStorage.fetch("poly", "tomato");
+        Optional<BasicPoly> polyOptional2 = sqLiteStorage.fetch("poly", "tomato");
         assertThat(polyOptional2.isPresent(), is(false));
+    }
+
+    @Test
+    public void testSaveUpdate() throws SQLiteStorageException {
+        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
+        sqLiteStorage.setPolyMigrators(Arrays.asList(migrator));
+
+        BasicPoly basicPoly = BasicPoly.newPoly("potato");
+        basicPoly.put("value", "tomato");
+
+        sqLiteStorage.save("poly", basicPoly);
+
+        BasicPoly poly = sqLiteStorage.fetch("poly", "potato").get();
+
+        assertThat(poly.get("value"), is("tomato"));
+
+
+        poly.put("value", "another potato");
+        sqLiteStorage.save("poly", poly);
+
+        poly = sqLiteStorage.fetch("poly", "potato").get();
+        assertThat(poly.get("value"), is("another potato"));
+
+
     }
 
 

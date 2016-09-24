@@ -61,20 +61,22 @@ public class SQLiteStorage {
                 List<String> setValues = new ArrayList<>();
                 keys.forEach( key -> { setValues.add(key + " = ?"); });
 
-                connection.prepareStatement(
-                        "UPDATE " + polyName + "SET "
-                                + String.join(",", setValues)
-                                + " WHERE _id = ?");
+                String updateQuery = "UPDATE " + polyName + " SET "
+                        + String.join(",", setValues)
+                        + " WHERE _id = ?";
 
+                preparedStatement = connection.prepareStatement(updateQuery);
                 for(int id = 0;id<values.size();id++) {
                     preparedStatement.setObject(id +1, values.get(id));
                 }
-                preparedStatement.setObject(values.size() +1 , poly._id());
+                preparedStatement.setObject(values.size() + 1 , poly._id());
             } else {
-                 preparedStatement = connection.prepareStatement(
-                        "INSERT INTO " + polyName +
-                                "(" + String.join(",", keys) +")" +
-                                " VALUES ( " + String.join(",", qmarks) + " )");
+
+                String insertQuery = "INSERT INTO " + polyName +
+                        "(" + String.join(",", keys) +")" +
+                        " VALUES ( " + String.join(",", qmarks) + " )";
+
+                preparedStatement = connection.prepareStatement(insertQuery);
                 for(int id = 0;id<values.size();id++) {
                     preparedStatement.setObject(id +1, values.get(id));
                 }
@@ -94,7 +96,7 @@ public class SQLiteStorage {
      * @param id
      * @return
      */
-    public Optional<Poly> fetch(String polyName, String id) {
+    public Optional<BasicPoly> fetch(String polyName, String id) {
         try (Connection connection = openDb()){
             ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM " + polyName + " WHERE _id = '" + id + "' ;");
             if (!resultSet.next()) {
