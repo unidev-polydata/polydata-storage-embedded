@@ -117,6 +117,12 @@ public class SQLiteStorage {
         return Optional.empty();
     }
 
+    /**
+     * Remove poly from storage
+     * @param polyName
+     * @param id
+     * @throws SQLiteStorageException
+     */
     public void remove(String polyName, String id) throws SQLiteStorageException {
         try (Connection connection = openDb()) {
             PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + polyName + " WHERE _id = ?");
@@ -127,6 +133,12 @@ public class SQLiteStorage {
         }
     }
 
+    /**
+     * Evaluate statement and try to map results as poly list
+     * @param preparedStatement
+     * @return
+     * @throws SQLiteStorageException
+     */
     public List<BasicPoly> evaluateStatement(PreparedStatement preparedStatement) throws SQLiteStorageException {
 
         try {
@@ -166,6 +178,11 @@ public class SQLiteStorage {
         }
     }
 
+    /**
+     * Open poly storage connection
+     * @return
+     * @throws SQLException
+     */
     public Connection openDb() throws SQLException {
         return DriverManager.getConnection("jdbc:sqlite:" + dbFile);
     }
