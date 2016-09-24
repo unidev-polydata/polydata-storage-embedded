@@ -20,26 +20,28 @@ import java.util.Optional;
  */
 public class SQLiteStorageTest {
 
+    SQLitePolyMigrator migrator = new SQLitePolyMigrator() {
+        @Override
+        public boolean canHandle(String poly) {
+            return "poly".equalsIgnoreCase(poly);
+        }
+
+        @Override
+        public void handle(String poly, Connection connection) throws SQLiteStorageException {
+            try {
+                Statement statement = connection.createStatement();
+                statement.executeUpdate("CREATE TABLE IF NOT EXISTS "+poly+" (_id TEXT PRIMARY KEY, value TEXT)");
+            } catch (SQLException e) {
+                throw new SQLiteStorageException(e);
+            }
+        }
+    };
+
     @Test
     public void testStorageSaveLoad() throws SQLiteStorageException {
 
         SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
-        sqLiteStorage.setPolyMigrators(Arrays.asList(new SQLitePolyMigrator() {
-            @Override
-            public boolean canHandle(String poly) {
-                return "poly".equalsIgnoreCase(poly);
-            }
-
-            @Override
-            public void handle(String poly, Connection connection) throws SQLiteStorageException {
-                try {
-                    Statement statement = connection.createStatement();
-                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS "+poly+" (_id TEXT PRIMARY KEY, value TEXT)");
-                } catch (SQLException e) {
-                    throw new SQLiteStorageException(e);
-                }
-            }
-        }));
+        sqLiteStorage.setPolyMigrators(Arrays.asList(migrator));
 
         BasicPoly basicPoly = BasicPoly.newPoly("potato");
         basicPoly.put("value", "tomato");
@@ -58,4 +60,6 @@ public class SQLiteStorageTest {
         Optional<Poly> polyOptional2 = sqLiteStorage.fetch("poly", "tomato");
         assertThat(polyOptional2.isPresent(), is(false));
     }
+
+
 }
