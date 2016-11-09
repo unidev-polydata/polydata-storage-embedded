@@ -1,6 +1,6 @@
 project.ext.unidevPlatformVersion = "2.0.0"
-project.ext.polydataDomainVersion = "2.0.0"
-project.ext.polydataStorageVersion = "2.0.0"
+project.ext.polydataDomainVersion = "2.1.0-SNAPSHOT"
+project.ext.polydataStorageVersion = "2.1.0-SNAPSHOT"
 
 
 subprojects {
@@ -10,7 +10,7 @@ subprojects {
     apply plugin: 'idea'
 
     group = 'com.unidev.polydata'
-    version = '2.0.0'
+    version = '2.1.0-SNAPSHOT'
 
     apply from: 'http://dev.local/gradle/uploadArchivesSftp.groovy'
     apply from: 'http://dev.local/gradle/defaultRepositories.groovy'
