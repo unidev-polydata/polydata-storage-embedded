@@ -52,11 +52,11 @@ public class SQLiteTest {
         }
 
         System.out.println("***Json query***");
-        rs = statement.executeQuery("select poly.json from poly;");
+        rs = statement.executeQuery("select json_extract(poly.json, '$.key1') as data from poly ;");
         while(rs.next())
         {
 
-            System.out.println("json = " + rs.getObject("json").getClass());
+            System.out.println("data = " + rs.getObject("data")  + " " + rs.getObject("data").getClass());
         }
 
     }
