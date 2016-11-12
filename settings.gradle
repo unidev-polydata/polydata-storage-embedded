@@ -1,1 +1,2 @@
 include "polydata-storage-sqlite"
+include "polydata-manager-sqlite"
