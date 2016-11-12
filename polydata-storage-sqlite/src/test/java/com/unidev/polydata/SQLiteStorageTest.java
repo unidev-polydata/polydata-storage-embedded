@@ -70,6 +70,37 @@ public class SQLiteStorageTest {
     }
 
 
+    @Test
+    public void testSaveUpdate() throws SQLiteStorageException {
+        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
+        sqLiteStorage.migrateStorage();
+
+
+        BasicPoly basicPoly = BasicPoly.newPoly("potato");
+        basicPoly.put("value", "tomato");
+
+        Poly poly = sqLiteStorage.fetchById("potato");
+        assertThat(poly, is(nullValue()));
+
+        sqLiteStorage.persist(basicPoly);
+
+        Poly dbPoly = sqLiteStorage.fetchById("potato");
+        assertThat(dbPoly, is(notNullValue()));
+        assertThat(dbPoly.get("value"), is("tomato"));
+
+
+        BasicPoly updatePoly = BasicPoly.newPoly("potato");
+        updatePoly.put("value", "tomato2");
+        sqLiteStorage.persist(updatePoly);
+
+        Poly updatedPoly = sqLiteStorage.fetchById("potato");
+        assertThat(updatedPoly, is(notNullValue()));
+        assertThat(updatedPoly.get("value"), is("tomato2"));
+
+
+
+    }
+
 //        BasicPoly basicPoly = BasicPoly.newPoly("potato");
 //        basicPoly.put("value", "tomato");
 //
@@ -86,28 +117,7 @@ public class SQLiteStorageTest {
 //        Optional<BasicPoly> polyOptional2 = sqLiteStorage.fetch("poly", "tomato");
 //        assertThat(polyOptional2.isPresent(), is(false));
 
-//    @Test
-//    public void testSaveUpdate() throws SQLiteStorageException {
-//        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
-//        sqLiteStorage.setPolyMigrators(Arrays.asList(migrator));
-//
-//        BasicPoly basicPoly = BasicPoly.newPoly("potato");
-//        basicPoly.put("value", "tomato");
-//
-//        sqLiteStorage.save("poly", basicPoly);
-//
-//        BasicPoly poly = sqLiteStorage.fetch("poly", "potato").get();
-//
-//        assertThat(poly.get("value"), is("tomato"));
-//
-//
-//        poly.put("value", "another potato");
-//        sqLiteStorage.save("poly", poly);
-//
-//        poly = sqLiteStorage.fetch("poly", "potato").get();
-//        assertThat(poly.get("value"), is("another potato"));
-//
-//    }
+
 //
 //    @Test
 //    public void testPolyRemoval() throws SQLiteStorageException {
