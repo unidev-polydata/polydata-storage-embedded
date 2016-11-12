@@ -12,11 +12,18 @@ import java.sql.*;
 import java.util.Collection;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 /**
  * Named polydata storage,
  * Each poly storage will be dedicated table
  */
 public class SQLiteStorage implements ChangablePolyStorage {
+    private static Logger LOG = LoggerFactory.getLogger(SQLiteStorage.class);
+
+    public static final String METADATA_KEY = "metadata";
 
     public static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     {
@@ -28,7 +35,7 @@ public class SQLiteStorage implements ChangablePolyStorage {
         try {
             Class.forName("org.sqlite.JDBC");
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            LOG.error("Failed to load SQLite driver", e);
         }
     }
 
@@ -71,7 +78,20 @@ public class SQLiteStorage implements ChangablePolyStorage {
 
     @Override
     public <P extends Poly> P metadata() {
-        return null;
+        try {
+            return (P) fetchMetadata(METADATA_KEY).get();
+        } catch (SQLiteStorageException e) {
+            LOG.warn("Failed to fetch metadata", e);
+            return null;
+        }
+    }
+
+    public void metadata(Poly metadata){
+        try {
+            persistMetadata(METADATA_KEY, metadata);
+        } catch (SQLiteStorageException e) {
+            LOG.warn("Failed to persist", e);
+        }
     }
 
     @Override
