@@ -2,6 +2,7 @@ package com.unidev.polydata;
 
 import com.unidev.polydata.domain.Poly;
 import com.unidev.polydata.storage.ChangablePolyStorage;
+import org.flywaydb.core.Flyway;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -35,6 +36,17 @@ public class SQLiteStorage implements ChangablePolyStorage {
      */
     public Connection openDb() throws SQLException {
         return DriverManager.getConnection("jdbc:sqlite:" + dbFile);
+    }
+
+    /**
+     * Migrate storage records
+     */
+    public void migrateStorage() {
+        Flyway flyway = new Flyway();
+        flyway.setDataSource("jdbc:sqlite:" + dbFile, null, null);
+        flyway.setOutOfOrder(true);
+        flyway.setLocations("db/sqlitestorage");
+        flyway.migrate();
     }
 
 
