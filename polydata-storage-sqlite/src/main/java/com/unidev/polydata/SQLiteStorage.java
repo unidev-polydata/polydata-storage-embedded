@@ -79,7 +79,11 @@ public class SQLiteStorage implements ChangablePolyStorage {
     @Override
     public <P extends Poly> P metadata() {
         try {
-            return (P) fetchMetadata(METADATA_KEY).get();
+            Optional<Poly> metadataPoly = fetchMetadata(METADATA_KEY);
+            if (!metadataPoly.isPresent()) {
+                return null;
+            }
+            return (P) metadataPoly.get();
         } catch (SQLiteStorageException e) {
             LOG.warn("Failed to fetch metadata", e);
             return null;
