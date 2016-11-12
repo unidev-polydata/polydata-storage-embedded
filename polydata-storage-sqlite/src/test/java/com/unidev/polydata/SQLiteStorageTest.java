@@ -13,10 +13,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 /**
  * SQLite storage tests
@@ -96,11 +93,7 @@ public class SQLiteStorageTest {
         Poly updatedPoly = sqLiteStorage.fetchById("potato");
         assertThat(updatedPoly, is(notNullValue()));
         assertThat(updatedPoly.get("value"), is("tomato2"));
-
-
-
     }
-
 
     @Test
     public void testPolyRemoval() throws SQLiteStorageException {
@@ -122,50 +115,34 @@ public class SQLiteStorageTest {
 
         boolean missingRemoval2 = sqLiteStorage.remove("potato");
         assertThat(missingRemoval2, is(false));
+    }
+
+    @Test
+    public void testPolyListing() {
+        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
+        sqLiteStorage.migrateStorage();
+
+        assertThat(sqLiteStorage.size(), is(0L));
+
+        Collection<? extends Poly> list = sqLiteStorage.list();
+        assertThat(list.isEmpty(), is(true));
+
+        BasicPoly basicPoly = BasicPoly.newPoly("potato");
+        basicPoly.put("value", "tomato");
+
+        sqLiteStorage.persist(basicPoly);
+
+        assertThat(sqLiteStorage.size(), is(1L));
+        Collection<? extends Poly> records = sqLiteStorage.list();
+        assertThat(records.isEmpty(), is(false));
+        assertThat(records.size(), is(1));
+
+        Poly poly = records.iterator().next();
+        assertThat(poly, is(not(nullValue())));
+        assertThat(poly._id(), is("potato"));
+        assertThat(poly.get("value"), is("tomato"));
+
 
     }
-//
-//    @Test
-//    public void testStatementEvaluation() throws SQLiteStorageException, SQLException {
-//        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
-//        sqLiteStorage.setPolyMigrators(Arrays.asList(migrator));
-//
-//        for(int i = 1;i<=10;i++) {
-//            BasicPoly basicPoly = BasicPoly.newPoly("record_" + i);
-//            basicPoly.put("value", "" + new Random().nextLong());
-//            sqLiteStorage.save("poly", basicPoly);
-//        }
-//
-//        try (Connection connection = sqLiteStorage.openDb()) {
-//            PreparedStatement statement = connection.prepareStatement("SELECT * FROM poly;");
-//
-//            List<BasicPoly> polyList = sqLiteStorage.evaluateStatement(statement);
-//
-//            assertThat(polyList, not(nullValue()));
-//            assertThat(polyList.size(), is(10));
-//
-//
-//            statement = connection.prepareStatement("SELECT _id FROM poly WHERE _id = 'record_3' ");
-//            polyList = sqLiteStorage.evaluateStatement(statement);
-//
-//            assertThat(polyList, not(nullValue()));
-//            assertThat(polyList.size(), is(1));
-//
-//            BasicPoly basicPoly = polyList.get(0);
-//
-//            assertThat(basicPoly.size(), is(1));
-//            assertThat(basicPoly._id(), is("record_3"));
-//
-//
-//            statement = connection.prepareStatement("SELECT _id FROM poly WHERE _id = 'record_666' ");
-//            polyList = sqLiteStorage.evaluateStatement(statement);
-//
-//            assertThat(polyList, not(nullValue()));
-//            assertThat(polyList.size(), is(0));
-//        }
-//
-//
-//    }
-
 
 }
