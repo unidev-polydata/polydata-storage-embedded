@@ -71,11 +71,26 @@ public class SQLiteStorage implements ChangablePolyStorage {
     @Override
     public <P extends Poly> P persist(P poly) {
         try(Connection connection = openDb()) {
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO data VALUES(?, ?);");
+
             String rawJSON = OBJECT_MAPPER.writeValueAsString(poly);
-            preparedStatement.setString(1, poly._id());
-            preparedStatement.setObject(2, rawJSON);
-            preparedStatement.executeUpdate();
+
+            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM data WHERE _id = ?;");
+            dataStatement.setString(1, poly._id());
+            ResultSet dataResultSet = dataStatement.executeQuery();
+
+
+            if (!dataResultSet.next()) {
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO data(_id, data) VALUES(?, ?);");
+                preparedStatement.setString(1, poly._id());
+                preparedStatement.setObject(2, rawJSON);
+                preparedStatement.executeUpdate();
+            } else {
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO data(id, _id, data) VALUES(?, ?, ?);");
+                preparedStatement.setObject(1, dataResultSet.getObject("id"));
+                preparedStatement.setString(2, poly._id());
+                preparedStatement.setObject(3, rawJSON);
+                preparedStatement.executeUpdate();
+            }
             return poly;
         } catch (Exception e) {
             LOG.error("Failed to import poly {}", poly, e);
@@ -175,7 +190,7 @@ public class SQLiteStorage implements ChangablePolyStorage {
      */
     public void persistMetadata(String key, Poly poly) throws SQLiteStorageException {
         try(Connection connection = openDb()) {
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO metadata VALUES(?, ?);");
+            PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO metadata(_id, data) VALUES(?, ?);");
             String rawJSON = OBJECT_MAPPER.writeValueAsString(poly);
             preparedStatement.setString(1, key);
             preparedStatement.setObject(2, rawJSON);
