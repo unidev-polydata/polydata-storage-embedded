@@ -1,0 +1,1 @@
+CREATE TABLE data (_id TEXT PRIMARY KEY, data JSON)
