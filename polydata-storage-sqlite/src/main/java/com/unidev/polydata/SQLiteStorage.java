@@ -1,19 +1,28 @@
 package com.unidev.polydata;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.unidev.polydata.domain.BasicPoly;
 import com.unidev.polydata.domain.Poly;
 import com.unidev.polydata.storage.ChangablePolyStorage;
 import org.flywaydb.core.Flyway;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Named polydata storage,
  * Each poly storage will be dedicated table
  */
 public class SQLiteStorage implements ChangablePolyStorage {
+
+    public static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    {
+        OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        OBJECT_MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    }
 
     static {
         try {
@@ -80,6 +89,49 @@ public class SQLiteStorage implements ChangablePolyStorage {
         return 0;
     }
 
+
+    /**
+     * Persist custom metadata in storage
+     * @param key
+     * @param poly
+     * @throws SQLiteStorageException
+     */
+    public void persistMetadata(String key, Poly poly) throws SQLiteStorageException {
+        try(Connection connection = openDb()) {
+            PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO metadata VALUES(?, ?);");
+            String rawJSON = OBJECT_MAPPER.writeValueAsString(poly);
+            preparedStatement.setString(1, key);
+            preparedStatement.setObject(2, rawJSON);
+
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            throw new SQLiteStorageException(e);
+        }
+    }
+
+    /**
+     * Fetch metadata
+     * @param key
+     * @return
+     * @throws SQLiteStorageException
+     */
+    public Optional<Poly> fetchMetadata(String key) throws SQLiteStorageException {
+        try(Connection connection = openDb()) {
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM metadata WHERE _id = ?;");
+            preparedStatement.setString(1, key);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (!resultSet.next()) {
+                return Optional.empty();
+            }
+
+            String rawJSON = resultSet.getString("data");
+
+            return Optional.of(OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class));
+        } catch (Exception e) {
+            throw new SQLiteStorageException(e);
+        }
+    }
 
     //    private Collection<SQLitePolyMigrator> polyMigrators;
 
