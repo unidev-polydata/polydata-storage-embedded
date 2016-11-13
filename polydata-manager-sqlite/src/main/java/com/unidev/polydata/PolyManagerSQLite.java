@@ -21,7 +21,7 @@ public class PolyManagerSQLite implements PolyManager {
     }
 
     @Override
-    public PolyStorage storage() {
+    public SQLiteStorage storage() {
         return polyStorage;
     }
 
