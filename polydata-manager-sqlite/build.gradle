@@ -1,5 +1,5 @@
 dependencies {
-    compile project(":polydata-storage-sqlite")
+    compile project(":polydata-storage-sqlite-core")
 
     compile "com.unidev.polydata:polydata-manager:$project.polydataStorageVersion"
 }
