@@ -104,6 +104,51 @@ public class SQLiteStorage {
     }
 
     /**
+     * Persist storage poly
+     * @param connection
+     * @param poly
+     * @return
+     */
+    public BasicPoly persistPoly(Connection connection, BasicPoly poly) {
+        try {
+            String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(poly);
+
+            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + SQLitePolyConstants.DATA_POLY + " WHERE _id = ?;");
+            dataStatement.setString(1, poly._id());
+            ResultSet dataResultSet = dataStatement.executeQuery();
+
+            if (!dataResultSet.next()) {
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(_id, tags, data) VALUES(?, ?, ?);");
+                preparedStatement.setString(1, poly._id());
+                Set<String> tags = poly.fetch(SQLitePolyConstants.TAGS_KEY);
+                if (tags == null) {
+                    preparedStatement.setString(2, null);
+                } else {
+                    preparedStatement.setString(2, String.join(",", tags));
+                }
+                preparedStatement.setObject(3, rawJSON);
+                preparedStatement.executeUpdate();
+            } else {
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(id, _id, tags, data) VALUES(?, ?, ?, ?);");
+                preparedStatement.setObject(1, dataResultSet.getObject("id"));
+                preparedStatement.setString(2, poly._id());
+                Set<String> tags = poly.fetch(SQLitePolyConstants.TAGS_KEY);
+                if (tags == null) {
+                    preparedStatement.setString(3, null);
+                } else {
+                    preparedStatement.setString(3, String.join(",", tags));
+                }
+                preparedStatement.setObject(4, rawJSON);
+                preparedStatement.executeUpdate();
+            }
+        }catch (Exception e) {
+            LOG.error("Failed to import poly {}", poly, e);
+            throw new SQLiteStorageException(e);
+        }
+        return poly;
+    }
+
+    /**
      * Fetch support poly by id
      * @return
      */
