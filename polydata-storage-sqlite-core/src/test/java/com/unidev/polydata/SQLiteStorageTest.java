@@ -1,36 +1,44 @@
 package com.unidev.polydata;
 
 import com.unidev.polydata.domain.BasicPoly;
-import com.unidev.polydata.domain.Poly;
 import org.junit.Before;
 import org.junit.Test;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-
 
 import java.io.File;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
 
 /**
  * SQLite storage tests
  */
 public class SQLiteStorageTest {
 
-
+    File dbFile;
 
     @Before
     public void setup() {
-        new File("/tmp/testdb.db").delete();
+        dbFile = new File("/tmp/testdb.db");
+        dbFile.delete();
     }
 
     @Test
     public void testStorageMigration() throws SQLiteStorageException {
-        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
+        SQLiteStorage sqLiteStorage = new SQLiteStorage(dbFile.getAbsolutePath());
         sqLiteStorage.migrateStorage();
+    }
+
+    @Test
+    public void testStoragePolyStorage() {
+        SQLiteStorage sqLiteStorage = new SQLiteStorage(dbFile.getAbsolutePath());
+        sqLiteStorage.migrateStorage();
+
+        BasicPoly poly = BasicPoly.newPoly("potato");
+
+        try (Connection connection = sqLiteStorage.openDb()) {
+            sqLiteStorage.persistPoly(connection, poly);
+        }catch (Exception e) {
+
+        }
+
     }
 //
 //    @Test
