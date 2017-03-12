@@ -18,7 +18,7 @@ package com.unidev.polydata;
 /**
  * SQLite storage exception
  */
-public class SQLiteStorageException extends Exception {
+public class SQLiteStorageException extends RuntimeException {
     public SQLiteStorageException() {
         super();
     }
