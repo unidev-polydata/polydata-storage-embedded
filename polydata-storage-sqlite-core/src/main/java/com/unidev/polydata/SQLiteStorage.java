@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
-import java.util.Optional;
+import java.util.*;
 
 import static com.unidev.polydata.SQLitePolyConstants.POLY_OBJECT_MAPPER;
 
@@ -73,13 +73,34 @@ public class SQLiteStorage {
      * @param id
      * @return
      */
-    public Optional<BasicPoly> fetchPoly(String id) {
-        try (Connection connection = openDb()) {
-            return fetchRawPoly(connection, SQLitePolyConstants.DATA_KEY, id);
-        } catch (Exception e) {
-            LOG.warn("Failed to fetch polys {}", dbFile, e);
-            return Optional.empty();
+    public Optional<BasicPoly> fetchPoly(Connection connection, String id) {
+        return fetchRawPoly(connection, SQLitePolyConstants.DATA_KEY, id);
+    }
+
+    /**
+     * Batch fetch polys by id
+     * @param polyIds
+     * @return
+     */
+    public Map<String, Optional<BasicPoly>> fetchPolyMap(Connection connection, Collection<String> polyIds) {
+        Map<String, Optional<BasicPoly>> result = new HashMap<>();
+        for(String id : polyIds) {
+            result.put(id, fetchPoly(connection, id));
         }
+        return result;
+    }
+
+    /**
+     * Batch fetch polys by id
+     * @param polyIds
+     * @return
+     */
+    public Collection<Optional<BasicPoly>> fetchPolys(Connection connection, Collection<String> polyIds) {
+        List<Optional<BasicPoly>> polys = new ArrayList<>();
+        for(String id : polyIds) {
+            polys.add(fetchPoly(connection, id));
+        }
+        return polys;
     }
 
     /**
