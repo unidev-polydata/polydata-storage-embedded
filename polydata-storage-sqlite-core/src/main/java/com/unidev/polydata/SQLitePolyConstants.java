@@ -25,8 +25,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class SQLitePolyConstants {
 
     public static final String ID_KEY = "_id";
-    public static final String DATE_KEY = "date";
     public static final String DATA_KEY = "data";
+    public static final String TAGS_KEY = "tags";
     public static final String COUNT_KEY = "count";
 
     public static ObjectMapper POLY_OBJECT_MAPPER = new ObjectMapper() {{

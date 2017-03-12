@@ -67,6 +67,21 @@ public class SQLiteStorage {
         flyway.migrate();
     }
 
+
+    /**
+     * Fetch poly by id
+     * @param id
+     * @return
+     */
+    public Optional<BasicPoly> fetchPoly(String id) {
+        try (Connection connection = openDb()) {
+            return fetchRawPoly(connection, SQLitePolyConstants.DATA_KEY, id);
+        } catch (Exception e) {
+            LOG.warn("Failed to fetch polys {}", dbFile, e);
+            return Optional.empty();
+        }
+    }
+
     /**
      * Fetch support poly by id
      * @return
