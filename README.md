@@ -2,7 +2,16 @@
 
 SQLite storage for polydata records
 
-Usage
+
+## Modules
+
+p
+
+## Usage
+
+`polydata-storage-sqlite` - module which works with one instance of db
+
+*unused/deprecated*  `polydata-manager-sqlite` - module for management of multiple db instances
 
 ```
 compile 'com.unidev.polydata:polydata-storage-sqlite:2.0.0-SNAPSHOT'
