@@ -6,6 +6,11 @@ import org.junit.Test;
 
 import java.io.File;
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Optional;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 /**
  * SQLite storage tests
@@ -27,16 +32,26 @@ public class SQLiteStorageTest {
     }
 
     @Test
-    public void testStoragePolyStorage() {
+    public void testStoragePolyStorage() throws SQLException {
         SQLiteStorage sqLiteStorage = new SQLiteStorage(dbFile.getAbsolutePath());
         sqLiteStorage.migrateStorage();
 
         BasicPoly poly = BasicPoly.newPoly("potato");
-
+        poly.put("tomato", "qwe");
         try (Connection connection = sqLiteStorage.openDb()) {
-            sqLiteStorage.persistPoly(connection, poly);
-        }catch (Exception e) {
 
+            Optional<BasicPoly> optinalPoly = sqLiteStorage.fetchPoly(connection, poly._id());
+            assertThat(optinalPoly.isPresent(), is(false));
+
+            sqLiteStorage.persistPoly(connection, poly);
+
+            Optional<BasicPoly> dbPoly = sqLiteStorage.fetchPoly(connection, poly._id());
+            assertThat(dbPoly.isPresent(), is(true));
+
+            assertThat(dbPoly.get()._id(), is("potato"));
+            assertThat(dbPoly.get().fetch("tomato"), is("qwe"));
+        }catch (Exception e) {
+            throw e;
         }
 
     }
