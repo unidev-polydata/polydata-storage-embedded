@@ -124,6 +124,20 @@ public class SQLiteStorage {
         }
     }
 
+    /**
+     * Remove raw poly from db
+     */
+    public boolean removeRawPoly(Connection connection, String table, String id) {
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + table + " WHERE _id = ?");
+            preparedStatement.setString(1, id);
+            return preparedStatement.executeUpdate() != 0;
+        } catch (Exception e) {
+            LOG.error("Failed to remove poly {} {} {}", table, id, dbFile, e);
+            return false;
+        }
+    }
+
 //
 //
 //    @Override
