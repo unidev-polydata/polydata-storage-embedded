@@ -1,6 +1,6 @@
 project.ext.unidevPlatformVersion = "2.0.0"
 project.ext.polydataDomainVersion = "2.1.0"
-project.ext.polydataStorageVersion = "2.1.0-SNAPSHOT"
+project.ext.polydataStorageVersion = "2.1.0"
 
 
 subprojects {
