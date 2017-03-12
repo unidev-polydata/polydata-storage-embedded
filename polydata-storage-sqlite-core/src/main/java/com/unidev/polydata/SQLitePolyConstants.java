@@ -24,6 +24,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
  */
 public class SQLitePolyConstants {
 
+    public static final String TAGS_POLY = "tags";
+    public static final String DATA_POLY = "data";
+
     public static final String ID_KEY = "_id";
     public static final String DATA_KEY = "data";
     public static final String TAGS_KEY = "tags";
