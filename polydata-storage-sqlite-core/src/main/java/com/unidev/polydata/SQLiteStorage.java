@@ -15,13 +15,15 @@
  */
 package com.unidev.polydata;
 
+import com.unidev.polydata.domain.BasicPoly;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.Optional;
+
+import static com.unidev.polydata.SQLitePolyConstants.POLY_OBJECT_MAPPER;
 
 /**
  * Named polydata storage,
@@ -63,6 +65,27 @@ public class SQLiteStorage {
         flyway.setOutOfOrder(true);
         flyway.setLocations("db/sqlitestorage");
         flyway.migrate();
+    }
+
+    /**
+     * Fetch support poly by id
+     * @return
+     */
+    public Optional<BasicPoly> fetchRawPoly(Connection connection, String table, String id) {
+        PreparedStatement preparedStatement;
+        try {
+            preparedStatement = connection.prepareStatement("SELECT * FROM " + table + " WHERE _id = ?");
+            preparedStatement.setString(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                String rawJSON = resultSet.getString(SQLitePolyConstants.DATA_KEY);
+                return Optional.of(POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class));
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+            LOG.warn("Failed to fetch support poly {} {} {}", table, id, dbFile, e);
+            return Optional.empty();
+        }
     }
 
 //
