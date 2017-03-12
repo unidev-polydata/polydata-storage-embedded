@@ -1,1 +1,0 @@
-CREATE TABLE metadata (_id TEXT PRIMARY KEY, data JSON)
