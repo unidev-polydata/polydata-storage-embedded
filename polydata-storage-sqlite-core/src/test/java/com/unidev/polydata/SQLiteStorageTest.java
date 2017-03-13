@@ -32,7 +32,7 @@ public class SQLiteStorageTest {
     }
 
     @Test
-    public void testStoragePolyStorage() throws SQLException {
+    public void testPersistingPoly() throws SQLException {
         SQLiteStorage sqLiteStorage = new SQLiteStorage(dbFile.getAbsolutePath());
         sqLiteStorage.migrateStorage();
 
@@ -50,6 +50,18 @@ public class SQLiteStorageTest {
 
             assertThat(dbPoly.get()._id(), is("potato"));
             assertThat(dbPoly.get().fetch("tomato"), is("qwe"));
+
+            poly.put("new-field", "987");
+            poly.put("tomato", "000");
+
+            sqLiteStorage.persistPoly(connection, poly);
+
+            Optional<BasicPoly> dbPoly2 = sqLiteStorage.fetchPoly(connection, poly._id());
+            assertThat(dbPoly2.isPresent(), is(true));
+
+            assertThat(dbPoly2.get()._id(), is("potato"));
+            assertThat(dbPoly2.get().fetch("tomato"), is("000"));
+            assertThat(dbPoly2.get().fetch("new-field"), is("987"));
         }catch (Exception e) {
             throw e;
         }
