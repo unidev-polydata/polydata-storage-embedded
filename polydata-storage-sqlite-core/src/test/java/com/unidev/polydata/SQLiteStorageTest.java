@@ -67,6 +67,31 @@ public class SQLiteStorageTest {
         }
 
     }
+
+    @Test
+    public void testPolyRemoval() throws SQLException {
+        SQLiteStorage sqLiteStorage = new SQLiteStorage(dbFile.getAbsolutePath());
+        sqLiteStorage.migrateStorage();
+
+        BasicPoly poly = BasicPoly.newPoly("potato");
+        poly.put("tomato", "qwe");
+
+        try (Connection connection = sqLiteStorage.openDb()) {
+
+            sqLiteStorage.persistPoly(connection, poly);
+
+            Optional<BasicPoly> polyById = sqLiteStorage.fetchPoly(connection, "potato");
+            assertThat(polyById.isPresent(), is(true));
+
+            sqLiteStorage.removePoly(connection, "potato");
+
+            Optional<BasicPoly> polyById2 = sqLiteStorage.fetchPoly(connection, "potato");
+            assertThat(polyById2.isPresent(), is(false));
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
 //
 //    @Test
 //    public void testMetadataFetching() throws SQLiteStorageException {
