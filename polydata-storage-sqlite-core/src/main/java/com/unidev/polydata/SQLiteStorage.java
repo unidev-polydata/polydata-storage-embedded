@@ -24,6 +24,7 @@ import java.sql.*;
 import java.util.*;
 
 import static com.unidev.polydata.SQLitePolyConstants.POLY_OBJECT_MAPPER;
+import static com.unidev.polydata.SQLitePolyConstants.TAGS_POLY;
 
 /**
  * Named polydata storage,
@@ -191,6 +192,32 @@ public class SQLiteStorage {
             LOG.error("Failed to remove poly {} {} {}", table, id, dbFile, e);
             return false;
         }
+    }
+
+    public Optional<BasicPoly> persistTag(Connection connection, BasicPoly tagPoly) {
+        try {
+            String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(tagPoly);
+
+            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + SQLitePolyConstants.TAGS_POLY + " WHERE _id = ?;");
+            dataStatement.setString(1, tagPoly._id());
+            ResultSet dataResultSet = dataStatement.executeQuery();
+
+            if (!dataResultSet.next()) {
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.TAGS_POLY + "(_id, count, data) VALUES(?, ?, ?, ?);");
+                preparedStatement.setString(1, tagPoly._id());
+                preparedStatement.setLong(2, 1L);
+                preparedStatement.setObject(3, rawJSON);
+                preparedStatement.executeUpdate();
+            } else {
+                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + SQLitePolyConstants.TAGS_POLY + " SET _id = ?, count = count + 1, data =? WHERE id=?;");
+                preparedStatement.setString(1, tagPoly._id());
+                preparedStatement.setObject(2, rawJSON);
+                preparedStatement.executeUpdate();
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to tag poly {}", tagPoly, e);
+        }
+        return fetchRawPoly(connection, TAGS_POLY, tagPoly._id());
     }
 
 //
