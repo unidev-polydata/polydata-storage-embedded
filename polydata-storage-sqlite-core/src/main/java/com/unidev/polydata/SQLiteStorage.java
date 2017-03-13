@@ -194,6 +194,12 @@ public class SQLiteStorage {
         }
     }
 
+    /**
+     * Persist tag record
+     * @param connection
+     * @param tagPoly
+     * @return
+     */
     public Optional<BasicPoly> persistTag(Connection connection, BasicPoly tagPoly) {
         try {
             String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(tagPoly);
@@ -218,6 +224,43 @@ public class SQLiteStorage {
             LOG.error("Failed to tag poly {}", tagPoly, e);
         }
         return fetchRawPoly(connection, TAGS_POLY, tagPoly._id());
+    }
+
+    /**
+     * Count available polys from support table
+     * @param table
+     * @return
+     */
+    public Optional<Long> fetchPolyCount(Connection connection, String table) {
+        PreparedStatement preparedStatement;
+        try {
+            preparedStatement = connection.prepareStatement("SELECT COUNT(*) AS count FROM " + table + "");
+            return Optional.of(preparedStatement.executeQuery().getLong("count"));
+        } catch (SQLException e) {
+            LOG.warn("Failed to fetch poly count from {}", table, e);
+            return Optional.empty();
+        }
+    }
+
+    private List<BasicPoly> evaluateStatementToPolyList(PreparedStatement preparedStatement) {
+
+        List<BasicPoly> polyList = new ArrayList<>();
+        try {
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                String rawJSON = resultSet.getString(SQLitePolyConstants.DATA_KEY);
+                BasicPoly polyRecord = POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class);
+                try {
+                    polyRecord.put("count", resultSet.getObject("count"));
+                }catch (SQLException e) {}
+                polyList.add(polyRecord);
+            }
+            return polyList;
+        } catch (Exception e) {
+            LOG.warn("Failed to evaluate statement {}", dbFile, e);
+            throw new SQLiteStorageException(e);
+        }
     }
 
 //
