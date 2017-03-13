@@ -149,6 +149,16 @@ public class SQLiteStorage {
     }
 
     /**
+     * Remove poly by ID
+     * @param connection
+     * @param polyId
+     * @return
+     */
+    public boolean removePoly(Connection connection, String polyId) {
+        return removeRawPoly(connection, SQLitePolyConstants.DATA_POLY, polyId);
+    }
+
+    /**
      * Fetch support poly by id
      * @return
      */
