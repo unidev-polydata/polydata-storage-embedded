@@ -149,6 +149,10 @@ public class SQLiteStorage {
         return poly;
     }
 
+    // count polys
+
+    // query polys
+
     /**
      * Remove poly by ID
      * @param connection
@@ -157,41 +161,6 @@ public class SQLiteStorage {
      */
     public boolean removePoly(Connection connection, String polyId) {
         return removeRawPoly(connection, SQLitePolyConstants.DATA_POLY, polyId);
-    }
-
-    /**
-     * Fetch support poly by id
-     * @return
-     */
-    public Optional<BasicPoly> fetchRawPoly(Connection connection, String table, String id) {
-        PreparedStatement preparedStatement;
-        try {
-            preparedStatement = connection.prepareStatement("SELECT * FROM " + table + " WHERE _id = ?");
-            preparedStatement.setString(1, id);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                String rawJSON = resultSet.getString(SQLitePolyConstants.DATA_KEY);
-                return Optional.of(POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class));
-            }
-            return Optional.empty();
-        } catch (Exception e) {
-            LOG.warn("Failed to fetch support poly {} {} {}", table, id, dbFile, e);
-            return Optional.empty();
-        }
-    }
-
-    /**
-     * Remove raw poly from db
-     */
-    public boolean removeRawPoly(Connection connection, String table, String id) {
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + table + " WHERE _id = ?");
-            preparedStatement.setString(1, id);
-            return preparedStatement.executeUpdate() != 0;
-        } catch (Exception e) {
-            LOG.error("Failed to remove poly {} {} {}", table, id, dbFile, e);
-            return false;
-        }
     }
 
     /**
@@ -225,6 +194,18 @@ public class SQLiteStorage {
         }
         return fetchRawPoly(connection, TAGS_POLY, tagPoly._id());
     }
+
+    // fetch tags list
+
+    // fetch tag
+
+    // count tags
+
+    // persist tag index
+
+    // fetch tag index list
+
+    // fetch tag index item
 
     /**
      * Count available polys from support table
@@ -260,6 +241,41 @@ public class SQLiteStorage {
         } catch (Exception e) {
             LOG.warn("Failed to evaluate statement {}", dbFile, e);
             throw new SQLiteStorageException(e);
+        }
+    }
+
+    /**
+     * Fetch support poly by id
+     * @return
+     */
+    public Optional<BasicPoly> fetchRawPoly(Connection connection, String table, String id) {
+        PreparedStatement preparedStatement;
+        try {
+            preparedStatement = connection.prepareStatement("SELECT * FROM " + table + " WHERE _id = ?");
+            preparedStatement.setString(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                String rawJSON = resultSet.getString(SQLitePolyConstants.DATA_KEY);
+                return Optional.of(POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class));
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+            LOG.warn("Failed to fetch support poly {} {} {}", table, id, dbFile, e);
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Remove raw poly from db
+     */
+    public boolean removeRawPoly(Connection connection, String table, String id) {
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + table + " WHERE _id = ?");
+            preparedStatement.setString(1, id);
+            return preparedStatement.executeUpdate() != 0;
+        } catch (Exception e) {
+            LOG.error("Failed to remove poly {} {} {}", table, id, dbFile, e);
+            return false;
         }
     }
 
