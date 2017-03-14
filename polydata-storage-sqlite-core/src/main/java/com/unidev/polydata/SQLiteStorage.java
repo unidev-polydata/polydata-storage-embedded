@@ -195,9 +195,26 @@ public class SQLiteStorage {
         return fetchRawPoly(connection, TAGS_POLY, tagPoly._id());
     }
 
-    // fetch tags list
+    /**
+     * Fetching tag by id
+     * @param connection
+     * @return
+     */
+    public List<BasicPoly> fetchTags(Connection connection) {
 
-    // fetch tag
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + SQLitePolyConstants.TAGS_POLY + " ORDER BY count DESC");
+            return evaluateStatementToPolyList(preparedStatement);
+        } catch (SQLException e) {
+            LOG.warn("Failed to fetch tags", e);
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+
+    public Optional<BasicPoly> fetchTagPoly(Connection connection, String id) {
+        return fetchRawPoly(connection, SQLitePolyConstants.TAGS_POLY, id);
+    }
 
     // count tags
 
