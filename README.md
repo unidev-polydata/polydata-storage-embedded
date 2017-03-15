@@ -2,6 +2,18 @@
 
 SQLite storage for polydata records
 
+## DB records
+
+*Data*
+
+| id | _id  | tags  | data  |
+|---|---|---|---|
+| 1  |  ABC  | [ {tag:potato}, {category:tomato}] |  { }  |
+
+*Tag*
+
+*Tag Index*
+
 ## Modules
 
 `polydata-storage-sqlite` - module which works with one instance of db
