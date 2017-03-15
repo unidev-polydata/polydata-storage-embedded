@@ -218,6 +218,10 @@ public class SQLiteStorage {
 
     // count tags
 
+    public Optional<Long> fetchTagCount(Connection connection) {
+        return fetchPolyCount(connection, SQLitePolyConstants.TAGS_POLY);
+    }
+
     // persist tag index
 
     // fetch tag index list
