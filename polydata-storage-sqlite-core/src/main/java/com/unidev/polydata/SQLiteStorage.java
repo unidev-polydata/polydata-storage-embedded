@@ -118,18 +118,18 @@ public class SQLiteStorage {
             dataStatement.setString(1, poly._id());
             ResultSet dataResultSet = dataStatement.executeQuery();
 
-            if (!dataResultSet.next()) {
+            if (!dataResultSet.next()) { // insert
                 PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(_id, tags, data) VALUES(?, ?, ?);");
                 preparedStatement.setString(1, poly._id());
                 Set<String> tags = poly.fetch(SQLitePolyConstants.TAGS_KEY);
                 if (tags == null) {
                     preparedStatement.setString(2, null);
                 } else {
-                    preparedStatement.setString(2, String.join(",", tags));
+                    preparedStatement.setString(2, String.join(",", tags)); //TODO: replace with complex object
                 }
                 preparedStatement.setObject(3, rawJSON);
                 preparedStatement.executeUpdate();
-            } else {
+            } else { // update
                 PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(id, _id, tags, data) VALUES(?, ?, ?, ?);");
                 preparedStatement.setObject(1, dataResultSet.getObject("id"));
                 preparedStatement.setString(2, poly._id());
@@ -143,7 +143,7 @@ public class SQLiteStorage {
                 preparedStatement.executeUpdate();
             }
         }catch (Exception e) {
-            LOG.error("Failed to import poly {}", poly, e);
+            LOG.error("Failed to persist poly {}", poly, e);
             throw new SQLiteStorageException(e);
         }
         return poly;
@@ -169,7 +169,7 @@ public class SQLiteStorage {
      * @param tagPoly
      * @return
      */
-    public Optional<BasicPoly> persistTag(Connection connection, BasicPoly tagPoly) {
+    public BasicPoly persistTag(Connection connection, BasicPoly tagPoly) {
         try {
             String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(tagPoly);
 
@@ -178,7 +178,7 @@ public class SQLiteStorage {
             ResultSet dataResultSet = dataStatement.executeQuery();
 
             if (!dataResultSet.next()) {
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.TAGS_POLY + "(_id, count, data) VALUES(?, ?, ?, ?);");
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.TAGS_POLY + "(_id, count, data) VALUES(?, ?, ?);");
                 preparedStatement.setString(1, tagPoly._id());
                 preparedStatement.setLong(2, 1L);
                 preparedStatement.setObject(3, rawJSON);
@@ -190,9 +190,10 @@ public class SQLiteStorage {
                 preparedStatement.executeUpdate();
             }
         } catch (Exception e) {
-            LOG.error("Failed to tag poly {}", tagPoly, e);
+            LOG.error("Failed to persist tag poly {}", tagPoly, e);
+            throw new SQLiteStorageException(e);
         }
-        return fetchRawPoly(connection, TAGS_POLY, tagPoly._id());
+        return fetchRawPoly(connection, TAGS_POLY, tagPoly._id()).orElseThrow(SQLiteStorageException::new);
     }
 
     /**
@@ -212,17 +213,58 @@ public class SQLiteStorage {
     }
 
 
+    /**
+     * Fetch tag polys
+     * @param connection
+     * @param id
+     * @return
+     */
     public Optional<BasicPoly> fetchTagPoly(Connection connection, String id) {
         return fetchRawPoly(connection, SQLitePolyConstants.TAGS_POLY, id);
     }
 
     // count tags
 
+    /**
+     * Count tag records in tag poly
+     * @param connection
+     * @return
+     */
     public Optional<Long> fetchTagCount(Connection connection) {
         return fetchPolyCount(connection, SQLitePolyConstants.TAGS_POLY);
     }
 
     // persist tag index
+
+    public BasicPoly persistIndexTag(Connection connection, String tagIndex, String documentId, BasicPoly data) {
+        try {
+
+            String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(data);
+
+            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + tagIndex + " WHERE _id = ?;");
+            dataStatement.setString(1, documentId);
+            ResultSet dataResultSet = dataStatement.executeQuery();
+
+            if (!dataResultSet.next()) {
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + tagIndex + "(_id,tag, data) VALUES(?,?);");
+                preparedStatement.setString(1, documentId);
+                preparedStatement.setString(2, data._id());
+                preparedStatement.setObject(3, rawJSON);
+                preparedStatement.executeUpdate();
+            } else {
+                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + tagIndex + " SET _id = ?, tag = ?, data =? WHERE id=?;");
+                preparedStatement.setString(1, documentId);
+                preparedStatement.setString(2, data._id());
+                preparedStatement.setObject(3, rawJSON);
+                preparedStatement.executeUpdate();
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to persist tag index poly {}", data, e);
+            throw new SQLiteStorageException(e);
+        }
+        return fetchRawPoly(connection, tagIndex, documentId).orElseThrow(SQLiteStorageException::new);
+
+    }
 
     // fetch tag index list
 
