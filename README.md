@@ -12,7 +12,19 @@ SQLite storage for polydata records
 
 *Tag*
 
+| id | _id  | count  | data  |
+|---|---|---|---|
+| 1  |  tag_name  | 11 |  { }  |
+
 *Tag Index*
+
+tag_index_*category*
+
+| id | _id  | tag  | data  |
+|---|---|---|---|
+| 1  |  document_id  | cats_category |  { }  |
+
+
 
 ## Modules
 
