@@ -7,9 +7,11 @@ import org.junit.Test;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
 
 /**
@@ -108,6 +110,29 @@ public class SQLiteStorageTest {
         Optional<Long> tag_index_count = sqLiteStorage.fetchTagIndexCount(connection, "tag_index_potato");
         assertThat(tag_index_count.isPresent(), is(true));
         assertThat(tag_index_count.get()  == 1L, is(true));
+    }
+
+    @Test
+    public void testTagOperations() throws SQLException {
+        SQLiteStorage sqLiteStorage = new SQLiteStorage(dbFile.getAbsolutePath());
+        sqLiteStorage.migrateStorage();
+
+        Connection connection = sqLiteStorage.openDb();
+
+        sqLiteStorage.persistTag(connection, BasicPoly.newPoly("test_tag_1"));
+        sqLiteStorage.persistTag(connection, BasicPoly.newPoly("test_tag_1"));
+
+        sqLiteStorage.persistTag(connection, BasicPoly.newPoly("test_tag_2"));
+
+        List<BasicPoly> tagList = sqLiteStorage.fetchTags(connection);
+
+        assertThat(tagList, is(notNullValue()));
+        assertThat(tagList.size(), is(2));
+
+        Optional<BasicPoly> test_tag_1 = sqLiteStorage.fetchTagPoly(connection, "test_tag_1");
+        assertThat(test_tag_1.isPresent(), is(true));
+
+
     }
 
 //
