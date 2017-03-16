@@ -237,6 +237,14 @@ public class SQLiteStorage {
 
     // persist tag index
 
+    /**
+     * Persist tag index record
+     * @param connection
+     * @param tagIndex
+     * @param documentId
+     * @param data
+     * @return
+     */
     public BasicPoly persistIndexTag(Connection connection, String tagIndex, String documentId, BasicPoly data) {
         try {
 
@@ -273,16 +281,57 @@ public class SQLiteStorage {
 
     }
 
+    // fetch tag index list
+
+    /**
+     * Fetch tag index for specific tag
+     * @param connection
+     * @param tagIndex
+     * @return
+     */
+    public List<BasicPoly> fetchTagIndex(Connection connection, String tagIndex) {
+
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + tagIndex + " ");
+            return evaluateStatementToPolyList(preparedStatement);
+        } catch (SQLException e) {
+            LOG.warn("Failed to fetch tags", e);
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    /**
+     * Fetch tag polys
+     * @param connection
+     * @param id
+     * @return
+     */
+    public Optional<BasicPoly> fetchTagIndexPoly(Connection connection, String tagIndex, String id) {
+        return fetchRawPoly(connection, tagIndex, id);
+    }
+
+    // count tags
+
+    /**
+     * Count tag records in tag poly
+     * @return
+     */
+    public Optional<Long> fetchTagIndexCount(Connection connection, String tagIndex) {
+        return fetchPolyCount(connection, tagIndex);
+    }
+
+    // fetch tag index item
+
     private final static String TAG_INDEX_TABLE =
             "CREATE TABLE {0} (\n" +
-            "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            "  _id TEXT,\n" +
-            "  tag TEXT,\n" +
-            "  data JSON\n" +
-            ");\n" +
-            "\n" +
-            "CREATE INDEX {0}_id_idx ON {0} (_id);" +
-            "CREATE INDEX {0}_tag_idx ON {0} (tag);" +
+                    "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+                    "  _id TEXT,\n" +
+                    "  tag TEXT,\n" +
+                    "  data JSON\n" +
+                    ");\n" +
+                    "\n" +
+                    "CREATE INDEX {0}_id_idx ON {0} (_id);" +
+                    "CREATE INDEX {0}_tag_idx ON {0} (tag);" +
                     "";
 
     private void createIndexTagStorage(Connection connection, String tagIndex) throws SQLException {
@@ -291,10 +340,6 @@ public class SQLiteStorage {
             statement.execute(rawSQL);
         }
     }
-
-    // fetch tag index list
-
-    // fetch tag index item
 
     /**
      * Count available polys from support table
