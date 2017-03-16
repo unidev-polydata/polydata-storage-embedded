@@ -104,6 +104,10 @@ public class SQLiteStorageTest {
 
         sqLiteStorage.persistIndexTag(connection, "tag_index_potato", "document_tomato", basicPoly);
         sqLiteStorage.persistIndexTag(connection, "tag_index_potato", "document_tomato", basicPoly);
+
+        Optional<Long> tag_index_count = sqLiteStorage.fetchTagIndexCount(connection, "tag_index_potato");
+        assertThat(tag_index_count.isPresent(), is(true));
+        assertThat(tag_index_count.get()  == 1L, is(true));
     }
 
 //
