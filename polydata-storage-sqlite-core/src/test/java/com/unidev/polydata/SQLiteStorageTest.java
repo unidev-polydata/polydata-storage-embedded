@@ -92,6 +92,20 @@ public class SQLiteStorageTest {
         }
     }
 
+    @Test
+    public void testTagIndexOperations() throws SQLException {
+        SQLiteStorage sqLiteStorage = new SQLiteStorage(dbFile.getAbsolutePath());
+        sqLiteStorage.migrateStorage();
+
+        BasicPoly basicPoly = BasicPoly.newPoly();
+        basicPoly._id("qwe");
+
+        Connection connection = sqLiteStorage.openDb();
+
+        sqLiteStorage.persistIndexTag(connection, "tag_index_potato", "document_tomato", basicPoly);
+        sqLiteStorage.persistIndexTag(connection, "tag_index_potato", "document_tomato", basicPoly);
+    }
+
 //
 //    @Test
 //    public void testMetadataFetching() throws SQLiteStorageException {
