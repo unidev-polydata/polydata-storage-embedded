@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.text.MessageFormat;
 import java.util.*;
 
 import static com.unidev.polydata.SQLitePolyConstants.POLY_OBJECT_MAPPER;
@@ -239,6 +240,12 @@ public class SQLiteStorage {
     public BasicPoly persistIndexTag(Connection connection, String tagIndex, String documentId, BasicPoly data) {
         try {
 
+            PreparedStatement checkTableStatement = connection.prepareStatement("SELECT COUNT(name) AS count FROM sqlite_master WHERE name=?");
+            checkTableStatement.setString(1, tagIndex);
+            if (checkTableStatement.executeQuery().getLong("count") == 0) {
+                createIndexTagStorage(connection, tagIndex);
+            }
+
             String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(data);
 
             PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + tagIndex + " WHERE _id = ?;");
@@ -264,6 +271,25 @@ public class SQLiteStorage {
         }
         return fetchRawPoly(connection, tagIndex, documentId).orElseThrow(SQLiteStorageException::new);
 
+    }
+
+    private final static String TAG_INDEX_TABLE =
+            "CREATE TABLE {0} (\n" +
+            "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            "  _id TEXT,\n" +
+            "  tag TEXT,\n" +
+            "  data JSON\n" +
+            ");\n" +
+            "\n" +
+            "CREATE INDEX {0}_id_idx ON {0} (_id);" +
+            "CREATE INDEX {0}_tag_idx ON {0} (tag);" +
+                    "";
+
+    private void createIndexTagStorage(Connection connection, String tagIndex) throws SQLException {
+        String rawSQL = MessageFormat.format(TAG_INDEX_TABLE, tagIndex);
+        try(Statement statement = connection.createStatement()) {
+            statement.execute(rawSQL);
+        }
     }
 
     // fetch tag index list
