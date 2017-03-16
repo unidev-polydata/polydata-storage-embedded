@@ -172,23 +172,24 @@ public class SQLiteStorage {
      */
     public BasicPoly persistTag(Connection connection, BasicPoly tagPoly) {
         try {
-            String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(tagPoly);
 
-            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + SQLitePolyConstants.TAGS_POLY + " WHERE _id = ?;");
-            dataStatement.setString(1, tagPoly._id());
-            ResultSet dataResultSet = dataStatement.executeQuery();
+            Optional<BasicPoly> tagById = fetchTagPoly(connection, tagPoly._id());
 
-            if (!dataResultSet.next()) {
+            if (!tagById.isPresent()) {
+                tagPoly.put(SQLitePolyConstants.COUNT_KEY, 1);
+                String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(tagPoly);
+
                 PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.TAGS_POLY + "(_id, count, data) VALUES(?, ?, ?);");
                 preparedStatement.setString(1, tagPoly._id());
                 preparedStatement.setLong(2, 1L);
                 preparedStatement.setObject(3, rawJSON);
                 preparedStatement.executeUpdate();
             } else {
-                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + SQLitePolyConstants.TAGS_POLY + " SET _id = ?, count = count + 1, data =? WHERE id=?;");
-                preparedStatement.setString(1, tagPoly._id());
-                preparedStatement.setObject(2, rawJSON);
-                preparedStatement.setObject(3, dataResultSet.getObject("id"));
+                tagPoly.put(SQLitePolyConstants.COUNT_KEY, ((int)tagById.get().fetch(SQLitePolyConstants.COUNT_KEY) + 1));
+                String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(tagPoly);
+                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + SQLitePolyConstants.TAGS_POLY + " SET count = count + 1, data =? WHERE _id = ?;");
+                preparedStatement.setString(1, rawJSON);
+                preparedStatement.setString(2, tagPoly._id());
                 preparedStatement.executeUpdate();
             }
         } catch (Exception e) {

@@ -131,8 +131,16 @@ public class SQLiteStorageTest {
 
         Optional<BasicPoly> test_tag_1 = sqLiteStorage.fetchTagPoly(connection, "test_tag_1");
         assertThat(test_tag_1.isPresent(), is(true));
+        int count = test_tag_1.get().fetch("_count");
+        assertThat(count, is(2));
 
+        Optional<BasicPoly> test_tag_2 = sqLiteStorage.fetchTagPoly(connection, "test_tag_2");
+        assertThat(test_tag_2.isPresent(), is(true));
+        int count2 = test_tag_2.get().fetch("_count");
+        assertThat(count2, is(1));
 
+        Optional<BasicPoly> test_tag_3 = sqLiteStorage.fetchTagPoly(connection, "test_tag_3");
+        assertThat(test_tag_3.isPresent(), is(false));
     }
 
 //

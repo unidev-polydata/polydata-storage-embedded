@@ -30,7 +30,7 @@ public class SQLitePolyConstants {
     public static final String ID_KEY = "_id";
     public static final String DATA_KEY = "data";
     public static final String TAGS_KEY = "tags";
-    public static final String COUNT_KEY = "count";
+    public static final String COUNT_KEY = "_count";
 
     public static ObjectMapper POLY_OBJECT_MAPPER = new ObjectMapper() {{
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
