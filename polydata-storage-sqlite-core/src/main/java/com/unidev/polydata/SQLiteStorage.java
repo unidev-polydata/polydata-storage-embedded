@@ -188,6 +188,7 @@ public class SQLiteStorage {
                 PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + SQLitePolyConstants.TAGS_POLY + " SET _id = ?, count = count + 1, data =? WHERE id=?;");
                 preparedStatement.setString(1, tagPoly._id());
                 preparedStatement.setObject(2, rawJSON);
+                preparedStatement.setObject(3, dataResultSet.getObject("id"));
                 preparedStatement.executeUpdate();
             }
         } catch (Exception e) {
@@ -261,7 +262,7 @@ public class SQLiteStorage {
             ResultSet dataResultSet = dataStatement.executeQuery();
 
             if (!dataResultSet.next()) {
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + tagIndex + "(_id,tag, data) VALUES(?,?);");
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + tagIndex + "(_id,tag, data) VALUES(?,?, ?);");
                 preparedStatement.setString(1, documentId);
                 preparedStatement.setString(2, data._id());
                 preparedStatement.setObject(3, rawJSON);
@@ -271,6 +272,7 @@ public class SQLiteStorage {
                 preparedStatement.setString(1, documentId);
                 preparedStatement.setString(2, data._id());
                 preparedStatement.setObject(3, rawJSON);
+                preparedStatement.setObject(4, dataResultSet.getObject("id"));
                 preparedStatement.executeUpdate();
             }
         } catch (Exception e) {
