@@ -7,6 +7,7 @@ import org.junit.Test;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +41,7 @@ public class SQLiteStorageTest {
 
         BasicPoly poly = BasicPoly.newPoly("potato");
         poly.put("tomato", "qwe");
+        poly.put(SQLitePolyConstants.TAGS_KEY, Arrays.asList("123", "xyz"));
         try (Connection connection = sqLiteStorage.openDb()) {
 
             Optional<BasicPoly> optinalPoly = sqLiteStorage.fetchPoly(connection, poly._id());

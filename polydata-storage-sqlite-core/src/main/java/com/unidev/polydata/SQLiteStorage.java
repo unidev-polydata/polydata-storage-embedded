@@ -115,6 +115,12 @@ public class SQLiteStorage {
         try {
             String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(poly);
 
+            String rawTags = null;
+            Collection tags = poly.fetch(SQLitePolyConstants.TAGS_KEY);
+            if (tags != null) {
+                rawTags = POLY_OBJECT_MAPPER.writeValueAsString(tags);
+            }
+
             PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + SQLitePolyConstants.DATA_POLY + " WHERE _id = ?;");
             dataStatement.setString(1, poly._id());
             ResultSet dataResultSet = dataStatement.executeQuery();
@@ -122,24 +128,14 @@ public class SQLiteStorage {
             if (!dataResultSet.next()) { // insert
                 PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(_id, tags, data) VALUES(?, ?, ?);");
                 preparedStatement.setString(1, poly._id());
-                Set<String> tags = poly.fetch(SQLitePolyConstants.TAGS_KEY);
-                if (tags == null) {
-                    preparedStatement.setString(2, null);
-                } else {
-                    preparedStatement.setString(2, String.join(",", tags)); //TODO: replace with complex object
-                }
+                preparedStatement.setString(2, rawTags);
                 preparedStatement.setObject(3, rawJSON);
                 preparedStatement.executeUpdate();
             } else { // update
                 PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(id, _id, tags, data) VALUES(?, ?, ?, ?);");
                 preparedStatement.setObject(1, dataResultSet.getObject("id"));
                 preparedStatement.setString(2, poly._id());
-                Set<String> tags = poly.fetch(SQLitePolyConstants.TAGS_KEY);
-                if (tags == null) {
-                    preparedStatement.setString(3, null);
-                } else {
-                    preparedStatement.setString(3, String.join(",", tags));
-                }
+                preparedStatement.setString(3, rawTags);
                 preparedStatement.setObject(4, rawJSON);
                 preparedStatement.executeUpdate();
             }
