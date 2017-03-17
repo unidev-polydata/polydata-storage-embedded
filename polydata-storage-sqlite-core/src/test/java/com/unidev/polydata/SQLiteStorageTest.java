@@ -101,6 +101,7 @@ public class SQLiteStorageTest {
 
         BasicPoly basicPoly = BasicPoly.newPoly();
         basicPoly._id("qwe");
+        basicPoly.put("x", "y");
 
         Connection connection = sqLiteStorage.openDb();
 
@@ -110,6 +111,11 @@ public class SQLiteStorageTest {
         Optional<Long> tag_index_count = sqLiteStorage.fetchTagIndexCount(connection, "tag_index_potato");
         assertThat(tag_index_count.isPresent(), is(true));
         assertThat(tag_index_count.get()  == 1L, is(true));
+
+        Optional<BasicPoly> dbPoly = sqLiteStorage.fetchTagIndexPoly(connection, "tag_index_potato", "document_tomato");
+        assertThat(dbPoly.isPresent(), is(true));
+        assertThat(dbPoly.get().fetch("x"), is("y"));
+
     }
 
     @Test
