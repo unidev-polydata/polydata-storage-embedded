@@ -304,13 +304,31 @@ public class SQLiteStorage {
     }
 
     /**
-     * Fetch tag polys
-     * @param connection
-     * @param id
+     * Fetch tag index poly from index by documentId
      * @return
      */
-    public Optional<BasicPoly> fetchTagIndexPoly(Connection connection, String tagIndex, String id) {
-        return fetchRawPoly(connection, tagIndex, id);
+    public Optional<BasicPoly> fetchTagIndexPoly(Connection connection, String tagIndex, String documentId) {
+        return fetchRawPoly(connection, tagIndex, documentId);
+    }
+
+    /**
+     * Fetch tag index by tag
+     */
+    public Optional<BasicPoly> fetchTagIndexPolyByTag(Connection connection, String tagIndex, String tag) {
+        PreparedStatement preparedStatement;
+        try {
+            preparedStatement = connection.prepareStatement("SELECT * FROM " + tagIndex + " WHERE tag = ?");
+            preparedStatement.setString(1, tag);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                String rawJSON = resultSet.getString(SQLitePolyConstants.DATA_KEY);
+                return Optional.of(POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class));
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+            LOG.warn("Failed to fetch support poly {} {} {}", tagIndex, tag, dbFile, e);
+            return Optional.empty();
+        }
     }
 
     // count tags
@@ -369,9 +387,6 @@ public class SQLiteStorage {
             while (resultSet.next()) {
                 String rawJSON = resultSet.getString(SQLitePolyConstants.DATA_KEY);
                 BasicPoly polyRecord = POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class);
-                try {
-                    polyRecord.put("count", resultSet.getObject("count"));
-                }catch (SQLException e) {}
                 polyList.add(polyRecord);
             }
             return polyList;

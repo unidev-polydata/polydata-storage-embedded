@@ -116,6 +116,10 @@ public class SQLiteStorageTest {
         assertThat(dbPoly.isPresent(), is(true));
         assertThat(dbPoly.get().fetch("x"), is("y"));
 
+        Optional<BasicPoly> dbPolyByTag = sqLiteStorage.fetchTagIndexPolyByTag(connection, "tag_index_potato", "qwe");
+        assertThat(dbPolyByTag.isPresent(), is(true));
+        assertThat(dbPolyByTag.get().fetch("x"), is("y"));
+
     }
 
     @Test
