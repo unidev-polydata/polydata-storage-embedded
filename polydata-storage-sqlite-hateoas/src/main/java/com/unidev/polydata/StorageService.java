@@ -20,6 +20,10 @@ public class StorageService {
     @Value("${storage.root}")
     private String storageRoot;
 
+    public boolean existStorageRoot(String storage) {
+        return fetchRootFile(storage).exists();
+    }
+
     public boolean existDBStorage(String storage) {
         return fetchFile(storage, DB_FILE).exists();
     }
@@ -42,7 +46,11 @@ public class StorageService {
     }
 
     private File fetchFile(String storage, String file) {
-        return new File(new File(storageRoot, storage), file);
+        return new File(fetchRootFile(storage), file);
+    }
+
+    private File fetchRootFile(String storage) {
+        return new File(storageRoot, storage);
     }
 
     public String getStorageRoot() {
