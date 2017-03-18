@@ -14,6 +14,7 @@ import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service for managing poly records
@@ -87,6 +88,16 @@ public class StorageService {
             return sqLiteStorage.fetchTagIndex(connection, tag);
         } catch (SQLException e) {
             LOG.warn("Failed to fetchTagsIndex {} {} ", storage, tag, e);
+            throw new SQLiteStorageException(e);
+        }
+    }
+
+    public Optional<BasicPoly> fetchPoly(String storage, String id) {
+        SQLiteStorage sqLiteStorage = sqLiteStorage(storage);
+        try (Connection connection = sqLiteStorage.openDb()) {
+            return sqLiteStorage.fetchPoly(connection, id);
+        } catch (SQLException e) {
+            LOG.warn("Failed to fetchTagsIndex {} {} ", storage, id, e);
             throw new SQLiteStorageException(e);
         }
     }

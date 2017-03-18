@@ -64,7 +64,7 @@ public class Application extends WebSecurityConfigurerAdapter implements Servlet
 		http
 				.authorizeRequests()
 				.antMatchers("/api/**").permitAll()
-				.anyRequest().authenticated().and().formLogin();
+				.anyRequest().authenticated().and().formLogin().and().csrf().disable().cors().disable();
 	}
 
 	@Autowired
