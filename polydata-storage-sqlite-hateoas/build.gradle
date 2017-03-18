@@ -30,6 +30,8 @@ springBoot {
 
 dependencies {
 
+	compile project(":polydata-storage-sqlite-core")
+	
 	compile group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '4.9'
 
 	compile("com.unidev.platform:unidev-strings:2.1.0-SNAPSHOT")
