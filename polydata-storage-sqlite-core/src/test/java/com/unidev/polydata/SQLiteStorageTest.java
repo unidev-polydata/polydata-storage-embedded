@@ -73,6 +73,52 @@ public class SQLiteStorageTest {
     }
 
     @Test
+    public void testPolyQuery() throws SQLException {
+        SQLiteStorage sqLiteStorage = new SQLiteStorage(dbFile.getAbsolutePath());
+        sqLiteStorage.migrateStorage();
+
+        BasicPoly poly1 = BasicPoly.newPoly("potato1");
+        poly1.put("tomato", "qwe");
+        poly1.put(SQLitePolyConstants.TAGS_KEY, Arrays.asList("123", "xyz"));
+
+        BasicPoly poly2 = BasicPoly.newPoly("potato2");
+        poly2.put("custom", "value");
+        poly2.put(SQLitePolyConstants.TAGS_KEY, Arrays.asList("tag1", "tag2"));
+
+        try (Connection connection = sqLiteStorage.openDb()) {
+            sqLiteStorage.persistPoly(connection, poly1);
+            sqLiteStorage.persistPoly(connection, poly2);
+
+            SQLitePolyQuery tagQuery = new SQLitePolyQuery();
+            tagQuery.setTag("tag1");
+            List<BasicPoly> listPoly = sqLiteStorage.listPoly(connection, tagQuery);
+            assertThat(listPoly.size(), is(1));
+
+
+            SQLitePolyQuery pageQuery = new SQLitePolyQuery();
+            pageQuery.setPage(0L);
+            pageQuery.setItemPerPage(1L);
+
+            listPoly = sqLiteStorage.listPoly(connection, pageQuery);
+            assertThat(listPoly.size(), is(1));
+            assertThat(listPoly.get(0)._id(), is("potato2"));
+
+            SQLitePolyQuery page2Query = new SQLitePolyQuery();
+            page2Query.setPage(1L);
+            page2Query.setItemPerPage(1L);
+
+            listPoly = sqLiteStorage.listPoly(connection, page2Query);
+            assertThat(listPoly.size(), is(1));
+            assertThat(listPoly.get(0)._id(), is("potato1"));
+
+
+
+        }catch (Exception e) {
+            throw e;
+        }
+    }
+
+    @Test
     public void testPolyRemoval() throws SQLException {
         SQLiteStorage sqLiteStorage = new SQLiteStorage(dbFile.getAbsolutePath());
         sqLiteStorage.migrateStorage();
