@@ -112,6 +112,14 @@ public class SQLiteStorageTest {
             List<BasicPoly> listPoly = sqLiteStorage.listPoly(connection, tagQuery);
             assertThat(listPoly.size(), is(1));
 
+            long count = sqLiteStorage.fetchPolyCount(connection, tagQuery);
+            assertThat(count, is(1L));
+
+            SQLitePolyQuery tagQuery2 = new SQLitePolyQuery();
+            tagQuery2.setTag("random-tag");
+
+            long count2 = sqLiteStorage.fetchPolyCount(connection, tagQuery2);
+            assertThat(count2, is(0L));
 
             SQLitePolyQuery pageQuery = new SQLitePolyQuery();
             pageQuery.setPage(0L);
