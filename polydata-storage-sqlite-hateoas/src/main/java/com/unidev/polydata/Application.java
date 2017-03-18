@@ -22,6 +22,8 @@ import javax.servlet.ServletException;
 @EnableDiscoveryClient
 public class Application extends WebSecurityConfigurerAdapter implements ServletContextInitializer  {
 
+	public static final String VERSION = "0.0.1";
+
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
 	}
