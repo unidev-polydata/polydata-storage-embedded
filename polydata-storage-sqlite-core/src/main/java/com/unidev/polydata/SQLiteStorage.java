@@ -148,10 +148,30 @@ public class SQLiteStorage {
 
     // count polys
 
+    /**
+     * Count poly records
+     * @param connection
+     * @param polyQuery
+     * @return
+     */
+    public long fetchPolyCount(Connection connection, SQLitePolyQuery polyQuery) {
+        try {
+            PreparedStatement preparedStatement;
+            StringBuilder query = new StringBuilder("SELECT COUNT(*) AS count FROM " + SQLitePolyConstants.DATA_POLY + " WHERE 1=1 ");
+            preparedStatement = buildPolyQuery(polyQuery, true, connection, query);
+            return preparedStatement.executeQuery().getLong("count");
+        }catch (Exception e) {
+            LOG.warn("Failed to fetch polys {}", dbFile, e);
+            throw new SQLiteStorageException(e);
+        }
+    }
 
-
-    // query polys
-
+    /**
+     * Query poly records
+     * @param connection
+     * @param polyQuery
+     * @return
+     */
     public List<BasicPoly> listPoly(Connection connection, SQLitePolyQuery polyQuery) {
         try {
             PreparedStatement preparedStatement;
