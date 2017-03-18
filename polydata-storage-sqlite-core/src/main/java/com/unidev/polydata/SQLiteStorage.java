@@ -148,8 +148,46 @@ public class SQLiteStorage {
 
     // count polys
 
+
+
     // query polys
 
+    public List<BasicPoly> listPoly(Connection connection, SQLitePolyQuery polyQuery) {
+        try {
+            PreparedStatement preparedStatement;
+            StringBuilder query = new StringBuilder("SELECT * FROM " + SQLitePolyConstants.DATA_POLY + " WHERE 1=1 ");
+            preparedStatement = buildPolyQuery(polyQuery, true, connection, query);
+            return evaluateStatementToPolyList(preparedStatement);
+        }catch (Exception e) {
+            LOG.warn("Failed to fetch polys {}", dbFile, e);
+            throw new SQLiteStorageException(e);
+        }
+    }
+
+    private PreparedStatement buildPolyQuery(SQLitePolyQuery sqlitePolyQuery, boolean includePagination, Connection connection, StringBuilder query) throws SQLException {
+        Integer id = 1;
+        Map<Integer, Object> params = new HashMap<>();
+        PreparedStatement preparedStatement;
+
+        if (sqlitePolyQuery.getTag() != null) {
+            query.append(" AND " + SQLitePolyConstants.TAGS_KEY + " LIKE ?");
+            params.put(id++, "%" + sqlitePolyQuery.getTag() + "%");
+        }
+
+        if (includePagination) {
+            if (sqlitePolyQuery.getItemPerPage() != null) {
+                query.append(" ORDER BY id DESC LIMIT ? OFFSET ?");
+                params.put(id++, sqlitePolyQuery.getItemPerPage());
+                params.put(id++, sqlitePolyQuery.getItemPerPage() * (sqlitePolyQuery.getPage()));
+            }
+        }
+
+        preparedStatement = connection.prepareStatement(query.toString());
+        for (Map.Entry<Integer, Object> entry : params.entrySet()) {
+            preparedStatement.setObject(entry.getKey(), entry.getValue());
+        }
+        return preparedStatement;
+    }
     /**
      * Remove poly by ID
      * @param connection
