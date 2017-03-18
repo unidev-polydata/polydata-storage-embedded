@@ -34,6 +34,8 @@ dependencies {
 
 	compile("com.unidev.platform:unidev-strings:2.1.0-SNAPSHOT")
 	compile("com.unidev.platform:unidev-j2ee:2.1.0-SNAPSHOT")
+	compile("com.unidev.platform:unidev-dto:2.1.0-SNAPSHOT")
+	compile("com.unidev.platform:unidev-exception:2.1.0-SNAPSHOT")
 	compile 'org.jminix:jminix:1.2.0'
 
 	compile('org.springframework.cloud:spring-cloud-starter-eureka')
