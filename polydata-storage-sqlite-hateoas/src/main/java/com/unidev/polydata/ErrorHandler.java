@@ -20,7 +20,6 @@ public class ErrorHandler {
 
     private static Logger LOG = LoggerFactory.getLogger(ErrorHandler.class);
 
-
     @ExceptionHandler(Throwable.class)
     @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
