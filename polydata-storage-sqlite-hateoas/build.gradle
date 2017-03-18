@@ -30,6 +30,8 @@ springBoot {
 
 dependencies {
 
+	compile group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '4.9'
+
 	compile("com.unidev.platform:unidev-strings:2.1.0-SNAPSHOT")
 	compile("com.unidev.platform:unidev-j2ee:2.1.0-SNAPSHOT")
 	compile 'org.jminix:jminix:1.2.0'
