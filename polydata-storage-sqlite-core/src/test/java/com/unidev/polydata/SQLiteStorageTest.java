@@ -7,9 +7,7 @@ import org.junit.Test;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
@@ -39,15 +37,21 @@ public class SQLiteStorageTest {
         SQLiteStorage sqLiteStorage = new SQLiteStorage(dbFile.getAbsolutePath());
         sqLiteStorage.migrateStorage();
 
-        BasicPoly poly = BasicPoly.newPoly("potato");
-        poly.put("tomato", "qwe");
-        poly.put(SQLitePolyConstants.TAGS_KEY, Arrays.asList("123", "xyz"));
         try (Connection connection = sqLiteStorage.openDb()) {
+
+            BasicPoly poly = BasicPoly.newPoly("potato");
+            poly.put("tomato", "qwe");
+            poly.put(SQLitePolyConstants.TAGS_KEY, Arrays.asList("123", "xyz"));
+
+            BasicPoly poly2 = BasicPoly.newPoly("tomato");
+            poly2.put("tomato", "qwe");
+            poly2.put(SQLitePolyConstants.TAGS_KEY, Arrays.asList("123", "xyz"));
 
             Optional<BasicPoly> optinalPoly = sqLiteStorage.fetchPoly(connection, poly._id());
             assertThat(optinalPoly.isPresent(), is(false));
 
             sqLiteStorage.persistPoly(connection, poly);
+            sqLiteStorage.persistPoly(connection, poly2);
 
             Optional<BasicPoly> dbPoly = sqLiteStorage.fetchPoly(connection, poly._id());
             assertThat(dbPoly.isPresent(), is(true));
@@ -66,6 +70,20 @@ public class SQLiteStorageTest {
             assertThat(dbPoly2.get()._id(), is("potato"));
             assertThat(dbPoly2.get().fetch("tomato"), is("000"));
             assertThat(dbPoly2.get().fetch("new-field"), is("987"));
+
+            // batch poly fetching
+
+            Collection<Optional<BasicPoly>> polys = sqLiteStorage.fetchPolys(connection, Arrays.asList("potato", "tomato", "random-id"));
+            assertThat(polys.size(), is(3));
+
+            Map<String, Optional<BasicPoly>> fetchPolyMap = sqLiteStorage.fetchPolyMap(connection, Arrays.asList("potato", "tomato", "random-id"));
+            assertThat(fetchPolyMap.size(), is(3));
+
+            assertThat(fetchPolyMap.get("random-id").isPresent(), is(false));
+            assertThat(fetchPolyMap.get("potato").isPresent(), is(true));
+            assertThat(fetchPolyMap.get("potato").get()._id(), is("potato"));
+
+
         }catch (Exception e) {
             throw e;
         }
