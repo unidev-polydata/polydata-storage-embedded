@@ -1,3 +1,2 @@
 include "polydata-storage-sqlite-core"
-
-//include "polydata-manager-sqlite"
+include "polydata-storage-sqlite-hateoas"
