@@ -158,7 +158,7 @@ public class SQLiteStorage {
         try {
             PreparedStatement preparedStatement;
             StringBuilder query = new StringBuilder("SELECT COUNT(*) AS count FROM " + SQLitePolyConstants.DATA_POLY + " WHERE 1=1 ");
-            preparedStatement = buildPolyQuery(polyQuery, true, connection, query);
+            preparedStatement = buildPolyQuery(polyQuery, false, connection, query);
             return preparedStatement.executeQuery().getLong("count");
         }catch (Exception e) {
             LOG.warn("Failed to fetch polys {}", dbFile, e);
