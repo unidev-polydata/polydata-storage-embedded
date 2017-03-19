@@ -1,5 +1,6 @@
 package com.unidev.polydata.hateoas;
 
+import com.netflix.governator.annotations.binding.Request;
 import com.unidev.polydata.SQLitePolyQuery;
 import com.unidev.polydata.StorageService;
 import com.unidev.polydata.domain.BasicPoly;
@@ -23,7 +24,8 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 /**
  * API requests controller
  */
-@RestController("/api")
+@RequestMapping("/api")
+@RestController
 public class APIController {
 
     private static Logger LOG = LoggerFactory.getLogger(APIController.class);
@@ -31,7 +33,7 @@ public class APIController {
     @Autowired
     private StorageService storageService;
 
-    @GetMapping(value = "/api/storage/{storage}", produces= MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/storage/{storage}", produces= MediaType.APPLICATION_JSON_VALUE)
     public ResourceSupport index(@PathVariable("storage") String storage) {
         if (!storageService.existStorageRoot(storage)) {
             LOG.warn("Not found storage {}", storage);
@@ -45,16 +47,16 @@ public class APIController {
         }
 
         hateoasPolyIndex.add(
-                linkTo(APIController.class).slash("api").slash("storage").slash(storage).slash("tags").withRel("tags"),
-                linkTo(APIController.class).slash("api").slash("storage").slash(storage).slash("tag").slash("id").withRel("tag_index"),
-                linkTo(APIController.class).slash("api").slash("storage").slash(storage).slash("query").withRel("query"),
-                linkTo(APIController.class).slash("api").slash("storage").slash(storage).slash("poly").slash("id").withRel("poly")
+                linkTo(APIController.class).slash("storage").slash(storage).slash("tags").withRel("tags"),
+                linkTo(APIController.class).slash("storage").slash(storage).slash("tag").slash("id").withRel("tag_index"),
+                linkTo(APIController.class).slash("storage").slash(storage).slash("query").withRel("query"),
+                linkTo(APIController.class).slash("storage").slash(storage).slash("poly").slash("id").withRel("poly")
         );
         return hateoasPolyIndex;
     }
 
 
-    @PostMapping(value = "/api/storage/{storage}/query", produces= MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/storage/{storage}/query", produces= MediaType.APPLICATION_JSON_VALUE)
     public HateoasResponse query(@PathVariable("storage") String storage, @RequestBody(required = false) SQLitePolyQuery polyQuery) {
         if (!storageService.existStorageRoot(storage)) {
             LOG.warn("Not found storage {}", storage);
@@ -75,7 +77,7 @@ public class APIController {
         return listResponse;
     }
 
-    @GetMapping(value = "/api/storage/{storage}/tags", produces= MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/storage/{storage}/tags", produces= MediaType.APPLICATION_JSON_VALUE)
     public HateoasResponse tags(@PathVariable("storage") String storage) {
         if (!storageService.existStorageRoot(storage)) {
             LOG.warn("Not found storage {}", storage);
@@ -85,7 +87,7 @@ public class APIController {
         return hateoasResponse().data(tags);
     }
 
-    @GetMapping(value = "/api/storage/{storage}/tag/{tag}", produces= MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/storage/{storage}/tag/{tag}", produces= MediaType.APPLICATION_JSON_VALUE)
     public HateoasResponse tagIndex(@PathVariable("storage") String storage, @PathVariable("tag") String tag) {
         if (!storageService.existStorageRoot(storage)) {
             LOG.warn("Not found storage {}", storage);
@@ -95,7 +97,7 @@ public class APIController {
         return hateoasResponse().data(tags);
     }
 
-    @GetMapping(value = "/api/storage/{storage}/poly/{id}", produces= MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/storage/{storage}/poly/{id}", produces= MediaType.APPLICATION_JSON_VALUE)
     public HateoasResponse  poly(@PathVariable("storage") String storage, @PathVariable("id") String id) {
         if (!storageService.existStorageRoot(storage)) {
             LOG.warn("Not found storage {}", storage);
