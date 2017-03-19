@@ -63,7 +63,7 @@ public class StorageService {
             ListResponse listResponse = new ListResponse();
             List<BasicPoly> polyList = sqLiteStorage.listPoly(connection, query);
             long count = sqLiteStorage.fetchPolyCount(connection, query);
-            listResponse.setList(polyList);
+            listResponse.setData(polyList);
             listResponse.setCount(count);
             return listResponse;
         } catch (SQLException e) {
