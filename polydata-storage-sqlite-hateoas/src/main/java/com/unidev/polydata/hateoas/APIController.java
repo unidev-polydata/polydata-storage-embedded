@@ -20,10 +20,13 @@ import java.util.Optional;
 import static com.unidev.polydata.model.HateoasResponse.hateoasResponse;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
+/**
+ * API requests controller
+ */
 @RestController("/api")
-public class IndexController {
+public class APIController {
 
-    private static Logger LOG = LoggerFactory.getLogger(IndexController.class);
+    private static Logger LOG = LoggerFactory.getLogger(APIController.class);
 
     @Autowired
     private StorageService storageService;
@@ -42,10 +45,10 @@ public class IndexController {
         }
 
         hateoasPolyIndex.add(
-                linkTo(IndexController.class).slash("api").slash("storage").slash(storage).slash("tags").withRel("tags"),
-                linkTo(IndexController.class).slash("api").slash("storage").slash(storage).slash("tag").slash("id").withRel("tag_index"),
-                linkTo(IndexController.class).slash("api").slash("storage").slash(storage).slash("query").withRel("query"),
-                linkTo(IndexController.class).slash("api").slash("storage").slash(storage).slash("poly").slash("id").withRel("poly")
+                linkTo(APIController.class).slash("api").slash("storage").slash(storage).slash("tags").withRel("tags"),
+                linkTo(APIController.class).slash("api").slash("storage").slash(storage).slash("tag").slash("id").withRel("tag_index"),
+                linkTo(APIController.class).slash("api").slash("storage").slash(storage).slash("query").withRel("query"),
+                linkTo(APIController.class).slash("api").slash("storage").slash(storage).slash("poly").slash("id").withRel("poly")
         );
         return hateoasPolyIndex;
     }
@@ -69,7 +72,7 @@ public class IndexController {
         }
 
         ListResponse listResponse = storageService.queryPoly(storage, polyQuery);
-        return hateoasResponse().data(listResponse);
+        return listResponse;
     }
 
     @GetMapping(value = "/api/storage/{storage}/tags", produces= MediaType.APPLICATION_JSON_VALUE)
