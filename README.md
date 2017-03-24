@@ -30,6 +30,8 @@ tag_index_*category*
 
 `polydata-storage-sqlite` - module which works with one instance of db
 
+`polydata-storage-sqlite-hateoas` - hateoas interface for accessing poly records
+
 *unused/deprecated*  `polydata-manager-sqlite` - module for management of multiple db instances
 
 ## Usage
