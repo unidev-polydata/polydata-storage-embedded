@@ -2,6 +2,7 @@ package com.unidev.polydata.hateoas;
 
 import com.netflix.governator.annotations.binding.Request;
 import com.unidev.polydata.SQLitePolyQuery;
+import com.unidev.polydata.SQLiteStorage;
 import com.unidev.polydata.StorageService;
 import com.unidev.polydata.domain.BasicPoly;
 import com.unidev.polydata.domain.bucket.BasicPolyBucket;
@@ -16,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.unidev.polydata.model.HateoasResponse.hateoasResponse;
@@ -109,4 +111,16 @@ public class APIController {
         }
         return hateoasResponse().data(poly.get());
     }
+
+    @PostMapping(value = "/storage/{storage}/poly", produces= MediaType.APPLICATION_JSON_VALUE)
+    public HateoasResponse  batchFetchPoly(@PathVariable("storage") String storage,  @RequestBody List<String> polyIds) {
+        if (!storageService.existStorageRoot(storage)) {
+            LOG.warn("Not found storage {}", storage);
+            throw new NotFoundException("Storage " + storage + " not found");
+        }
+        Map<String, BasicPoly> polyMap = storageService.fetchPolyBatch(storage, polyIds);
+        return hateoasResponse().data(polyMap);
+    }
+
+
 }

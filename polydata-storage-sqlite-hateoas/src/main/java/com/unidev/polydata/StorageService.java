@@ -13,7 +13,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -100,6 +102,22 @@ public class StorageService {
             LOG.warn("Failed to fetchTagsIndex {} {} ", storage, id, e);
             throw new SQLiteStorageException(e);
         }
+    }
+
+    public Map<String, BasicPoly> fetchPolyBatch(String storage, List<String> ids) {
+        Map<String, BasicPoly> polyMap = new HashMap<>();
+        SQLiteStorage sqLiteStorage = sqLiteStorage(storage);
+        try (Connection connection = sqLiteStorage.openDb()) {
+            for (String id : ids) {
+                Optional<BasicPoly> basicPoly = sqLiteStorage.fetchPoly(connection, id);
+                basicPoly.ifPresent( item -> polyMap.put(item._id(), item));
+            }
+        } catch (SQLException e) {
+            LOG.warn("Failed to fetch basic polys {} {} ", storage, ids, e);
+            throw new SQLiteStorageException(e);
+        }
+
+        return polyMap;
     }
 
     private File fetchFile(String storage, String file) {
