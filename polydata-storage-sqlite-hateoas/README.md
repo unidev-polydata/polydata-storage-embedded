@@ -17,3 +17,5 @@ Batch fetch polys
 Query polys
 
 `curl -X POST  http://localhost:15200/api/storage/test/query`
+
+curl -v -H 'Content-Type: application/json'   -X POST -d '{ "randomOrder":"true", "page":"0" , "itemPerPage" : "1" }' http://localhost:15200/api/storage/test/query
