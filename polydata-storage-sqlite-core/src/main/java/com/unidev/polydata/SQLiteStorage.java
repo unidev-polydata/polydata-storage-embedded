@@ -194,9 +194,18 @@ public class SQLiteStorage {
             params.put(id++, "%" + sqlitePolyQuery.getTag() + "%");
         }
 
+
+
         if (includePagination) {
             if (sqlitePolyQuery.getItemPerPage() != null) {
-                query.append(" ORDER BY id DESC LIMIT ? OFFSET ?");
+
+                if (Boolean.TRUE.equals(sqlitePolyQuery.getRandomOrder())) {
+                    query.append(" ORDER BY RANDOM() ");
+                } else {
+                    query.append(" ORDER BY id DESC ");
+                }
+
+                query.append("  LIMIT ? OFFSET ?");
                 params.put(id++, sqlitePolyQuery.getItemPerPage());
                 params.put(id++, sqlitePolyQuery.getItemPerPage() * (sqlitePolyQuery.getPage()));
             }

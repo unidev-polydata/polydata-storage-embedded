@@ -11,6 +11,15 @@ public class SQLitePolyQuery {
     private String tag;
     private Long page = 0L;
     private Long itemPerPage = DEFAULT_ITEM_PER_PAGE;
+    private Boolean randomOrder;
+
+    public Boolean getRandomOrder() {
+        return randomOrder;
+    }
+
+    public void setRandomOrder(Boolean randomOrder) {
+        this.randomOrder = randomOrder;
+    }
 
     public String getTag() {
         return tag;
