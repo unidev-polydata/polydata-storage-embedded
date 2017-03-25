@@ -107,6 +107,10 @@ public class SQLiteStorageTest {
             sqLiteStorage.persistPoly(connection, poly1);
             sqLiteStorage.persistPoly(connection, poly2);
 
+            SQLitePolyQuery genericQuery = new SQLitePolyQuery();
+            List<BasicPoly> genericList = sqLiteStorage.listPoly(connection, genericQuery);
+            assertThat(genericList.size(), is(2));
+
             SQLitePolyQuery tagQuery = new SQLitePolyQuery();
             tagQuery.setTag("tag1");
             List<BasicPoly> listPoly = sqLiteStorage.listPoly(connection, tagQuery);
