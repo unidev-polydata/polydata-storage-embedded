@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.*;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.Date;
 
 import static com.unidev.polydata.SQLitePolyConstants.POLY_OBJECT_MAPPER;
 import static com.unidev.polydata.SQLitePolyConstants.TAGS_POLY;
@@ -124,19 +125,23 @@ public class SQLiteStorage {
             PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + SQLitePolyConstants.DATA_POLY + " WHERE _id = ?;");
             dataStatement.setString(1, poly._id());
             ResultSet dataResultSet = dataStatement.executeQuery();
-
+            Date date = new Date();
             if (!dataResultSet.next()) { // insert
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(_id, tags, data) VALUES(?, ?, ?);");
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(_id, tags, data, create_date, update_date) VALUES(?, ?, ?, ?, ?);");
                 preparedStatement.setString(1, poly._id());
                 preparedStatement.setString(2, rawTags);
                 preparedStatement.setObject(3, rawJSON);
+
+                preparedStatement.setObject(4, date);
+                preparedStatement.setObject(5, date);
                 preparedStatement.executeUpdate();
             } else { // update
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(id, _id, tags, data) VALUES(?, ?, ?, ?);");
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(id, _id, tags, data, update_date) VALUES(?, ?, ?, ?, ?);");
                 preparedStatement.setObject(1, dataResultSet.getObject("id"));
                 preparedStatement.setString(2, poly._id());
                 preparedStatement.setString(3, rawTags);
                 preparedStatement.setObject(4, rawJSON);
+                preparedStatement.setObject(5, date);
                 preparedStatement.executeUpdate();
             }
         }catch (Exception e) {
@@ -202,7 +207,7 @@ public class SQLiteStorage {
                 if (Boolean.TRUE.equals(sqlitePolyQuery.getRandomOrder())) {
                     query.append(" ORDER BY RANDOM() ");
                 } else {
-                    query.append(" ORDER BY id DESC ");
+                    query.append(" ORDER BY update_date DESC ");
                 }
 
                 query.append("  LIMIT ? OFFSET ?");
