@@ -136,12 +136,13 @@ public class SQLiteStorage {
                 preparedStatement.setObject(5, date);
                 preparedStatement.executeUpdate();
             } else { // update
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(id, _id, tags, data, update_date) VALUES(?, ?, ?, ?, ?);");
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(id, _id, tags, data, create_date, update_date) VALUES(?, ?, ?, ?, ?,?);");
                 preparedStatement.setObject(1, dataResultSet.getObject("id"));
                 preparedStatement.setString(2, poly._id());
                 preparedStatement.setString(3, rawTags);
                 preparedStatement.setObject(4, rawJSON);
-                preparedStatement.setObject(5, date);
+                preparedStatement.setObject(5, dataResultSet.getObject("create_date"));
+                preparedStatement.setObject(6, date);
                 preparedStatement.executeUpdate();
             }
         }catch (Exception e) {
