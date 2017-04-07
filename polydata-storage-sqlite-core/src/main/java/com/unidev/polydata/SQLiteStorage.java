@@ -417,18 +417,39 @@ public class SQLiteStorage {
                     "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
                     "  _id TEXT,\n" +
                     "  tag TEXT,\n" +
-                    "  data JSON\n" +
+                    "  data JSON,\n" +
+                    "create_date datetime DEFAULT CURRENT_TIMESTAMP," +
+                    "update_date datetime DEFAULT CURRENT_TIMESTAMP" +
                     ");\n" +
                     "\n" +
                     "CREATE INDEX {0}_id_idx ON {0} (_id);" +
                     "CREATE INDEX {0}_tag_idx ON {0} (tag);" +
+                    "CREATE INDEX {0}_update_date_idx ON {0} (update_date);" +
                     "";
+    private final static String TAG_INDEX_TABLE_UPDATE =
+            "ALTER TABLE {0} ADD  create_date datetime ;\n" +
+                    "UPDATE {0} SET create_date = datetime();\n" +
+                    "ALTER TABLE {0} ADD  update_date datetime ;\n" +
+                    "UPDATE {0} SET update_date = datetime();\n" +
+                    "CREATE INDEX {0}_update_date_idx ON {0} (update_date);";
 
     private void createIndexTagStorage(Connection connection, String tagIndex) throws SQLException {
-        String rawSQL = MessageFormat.format(TAG_INDEX_TABLE, tagIndex);
-        try(Statement statement = connection.createStatement()) {
-            statement.execute(rawSQL);
+
+        PreparedStatement checkTableStatement = connection.prepareStatement("SELECT COUNT(name) AS count FROM sqlite_master WHERE name=?");
+        checkTableStatement.setString(1, tagIndex);
+
+        if (checkTableStatement.executeQuery().getLong("count") == 0) { // create table
+            String rawSQL = MessageFormat.format(TAG_INDEX_TABLE, tagIndex);
+            try(Statement statement = connection.createStatement()) {
+                statement.execute(rawSQL);
+            }
+        }  else { // upgrade
+            String rawSQL = MessageFormat.format(TAG_INDEX_TABLE_UPDATE, tagIndex);
+            try(Statement statement = connection.createStatement()) {
+                statement.execute(rawSQL);
+            }
         }
+
     }
 
     /**
