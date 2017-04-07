@@ -34,8 +34,7 @@ public abstract class AbstractEmbeddedStorage {
 
     private static Logger LOG = LoggerFactory.getLogger(AbstractEmbeddedStorage.class);
 
-
-    private String dbFile;
+    protected String dbFile;
 
     public AbstractEmbeddedStorage(String dbFile) {
         this.dbFile = dbFile;
@@ -46,9 +45,7 @@ public abstract class AbstractEmbeddedStorage {
      * @return
      * @throws SQLException
      */
-    public Connection openDb() throws SQLException {
-        return DriverManager.getConnection("jdbc:sqlite:" + dbFile);
-    }
+    public abstract Connection openDb();
 
     /**
      * Migrate storage records
