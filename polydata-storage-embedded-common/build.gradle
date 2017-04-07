@@ -1,0 +1,9 @@
+dependencies {
+    compile "com.fasterxml.jackson.core:jackson-databind:2.8.1"
+
+    compile "com.unidev.platform:unidev-logger:$project.unidevPlatformVersion"
+    compile "com.unidev.polydata:polydata-domain:$project.polydataDomainVersion"
+    compile "com.unidev.polydata:polydata-storage:$project.polydataStorageVersion"
+}
+
+
