@@ -1,7 +1,7 @@
 dependencies {
     compile project(':polydata-storage-embedded-common')
     compile "org.flywaydb:flyway-core:4.0.3"
-
+    compile "com.h2database:h2:1.4.194"
 }
 
 
