@@ -1,2 +1,6 @@
+include "polydata-storage-embedded-common"
+
 include "polydata-storage-sqlite-core"
 include "polydata-storage-sqlite-hateoas"
+
+include "polydata-storage-h2-core"
