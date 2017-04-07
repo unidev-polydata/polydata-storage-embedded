@@ -147,7 +147,7 @@ public class SQLiteStorage {
             }
         }catch (Exception e) {
             LOG.error("Failed to persist poly {}", poly, e);
-            throw new SQLiteStorageException(e);
+            throw new EmbeddedStorageException(e);
         }
         return poly;
     }
@@ -168,7 +168,7 @@ public class SQLiteStorage {
             return preparedStatement.executeQuery().getLong("count");
         }catch (Exception e) {
             LOG.warn("Failed to fetch polys {}", dbFile, e);
-            throw new SQLiteStorageException(e);
+            throw new EmbeddedStorageException(e);
         }
     }
 
@@ -186,7 +186,7 @@ public class SQLiteStorage {
             return evaluateStatementToPolyList(preparedStatement);
         }catch (Exception e) {
             LOG.warn("Failed to fetch polys {}", dbFile, e);
-            throw new SQLiteStorageException(e);
+            throw new EmbeddedStorageException(e);
         }
     }
 
@@ -263,9 +263,9 @@ public class SQLiteStorage {
             }
         } catch (Exception e) {
             LOG.error("Failed to persist tag poly {}", tagPoly, e);
-            throw new SQLiteStorageException(e);
+            throw new EmbeddedStorageException(e);
         }
-        return fetchRawPoly(connection, TAGS_POLY, tagPoly._id()).orElseThrow(SQLiteStorageException::new);
+        return fetchRawPoly(connection, TAGS_POLY, tagPoly._id()).orElseThrow(EmbeddedStorageException::new);
     }
 
     /**
@@ -347,9 +347,9 @@ public class SQLiteStorage {
             }
         } catch (Exception e) {
             LOG.error("Failed to persist tag index poly {}", data, e);
-            throw new SQLiteStorageException(e);
+            throw new EmbeddedStorageException(e);
         }
-        return fetchRawPoly(connection, tagIndex, documentId).orElseThrow(SQLiteStorageException::new);
+        return fetchRawPoly(connection, tagIndex, documentId).orElseThrow(EmbeddedStorageException::new);
 
     }
 
@@ -464,7 +464,7 @@ public class SQLiteStorage {
             return preparedStatement.executeQuery().getLong("count");
         } catch (SQLException e) {
             LOG.warn("Failed to fetch poly count from {}", table, e);
-            throw new SQLiteStorageException(e);
+            throw new EmbeddedStorageException(e);
         }
     }
 
@@ -482,7 +482,7 @@ public class SQLiteStorage {
             return polyList;
         } catch (Exception e) {
             LOG.warn("Failed to evaluate statement {}", dbFile, e);
-            throw new SQLiteStorageException(e);
+            throw new EmbeddedStorageException(e);
         }
     }
 

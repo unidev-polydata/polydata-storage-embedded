@@ -18,20 +18,20 @@ package com.unidev.polydata;
 /**
  * SQLite storage exception
  */
-public class SQLiteStorageException extends RuntimeException {
-    public SQLiteStorageException() {
+public class EmbeddedStorageException extends RuntimeException {
+    public EmbeddedStorageException() {
         super();
     }
 
-    public SQLiteStorageException(String message) {
+    public EmbeddedStorageException(String message) {
         super(message);
     }
 
-    public SQLiteStorageException(String message, Throwable cause) {
+    public EmbeddedStorageException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public SQLiteStorageException(Throwable cause) {
+    public EmbeddedStorageException(Throwable cause) {
         super(cause);
     }
 }

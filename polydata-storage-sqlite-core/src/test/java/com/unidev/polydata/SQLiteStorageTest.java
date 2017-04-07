@@ -27,7 +27,7 @@ public class SQLiteStorageTest {
     }
 
     @Test
-    public void testStorageMigration() throws SQLiteStorageException {
+    public void testStorageMigration() throws EmbeddedStorageException {
         SQLiteStorage sqLiteStorage = new SQLiteStorage(dbFile.getAbsolutePath());
         sqLiteStorage.migrateStorage();
     }
@@ -232,7 +232,7 @@ public class SQLiteStorageTest {
 
 //
 //    @Test
-//    public void testMetadataFetching() throws SQLiteStorageException {
+//    public void testMetadataFetching() throws EmbeddedStorageException {
 //        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
 //        sqLiteStorage.migrateStorage();
 //
@@ -268,7 +268,7 @@ public class SQLiteStorageTest {
 //
 //
 //    @Test
-//    public void testSaveUpdate() throws SQLiteStorageException {
+//    public void testSaveUpdate() throws EmbeddedStorageException {
 //        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
 //        sqLiteStorage.migrateStorage();
 //
@@ -296,7 +296,7 @@ public class SQLiteStorageTest {
 //    }
 //
 //    @Test
-//    public void testPolyRemoval() throws SQLiteStorageException {
+//    public void testPolyRemoval() throws EmbeddedStorageException {
 //
 //        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
 //        sqLiteStorage.migrateStorage();

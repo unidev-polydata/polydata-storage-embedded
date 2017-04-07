@@ -70,7 +70,7 @@ public class StorageService {
             return listResponse;
         } catch (SQLException e) {
             LOG.warn("Failed to query polys {} {}", storage, query, e);
-            throw new SQLiteStorageException(e);
+            throw new EmbeddedStorageException(e);
         }
     }
 
@@ -80,7 +80,7 @@ public class StorageService {
             return sqLiteStorage.fetchTags(connection);
         } catch (SQLException e) {
             LOG.warn("Failed to fetchTags {} ", storage, e);
-            throw new SQLiteStorageException(e);
+            throw new EmbeddedStorageException(e);
         }
     }
 
@@ -90,7 +90,7 @@ public class StorageService {
             return sqLiteStorage.fetchTagIndex(connection, tag);
         } catch (SQLException e) {
             LOG.warn("Failed to fetchTagsIndex {} {} ", storage, tag, e);
-            throw new SQLiteStorageException(e);
+            throw new EmbeddedStorageException(e);
         }
     }
 
@@ -100,7 +100,7 @@ public class StorageService {
             return sqLiteStorage.fetchPoly(connection, id);
         } catch (SQLException e) {
             LOG.warn("Failed to fetchTagsIndex {} {} ", storage, id, e);
-            throw new SQLiteStorageException(e);
+            throw new EmbeddedStorageException(e);
         }
     }
 
@@ -114,7 +114,7 @@ public class StorageService {
             }
         } catch (SQLException e) {
             LOG.warn("Failed to fetch basic polys {} {} ", storage, ids, e);
-            throw new SQLiteStorageException(e);
+            throw new EmbeddedStorageException(e);
         }
 
         return polyMap;
