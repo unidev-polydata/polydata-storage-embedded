@@ -1,4 +1,5 @@
 dependencies {
+    compile project(':polydata-storage-embedded-common')
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.16.1'
     compile "com.fasterxml.jackson.core:jackson-databind:2.8.1"
     compile "org.flywaydb:flyway-core:4.0.3"
