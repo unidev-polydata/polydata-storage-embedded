@@ -52,7 +52,7 @@ public class StorageService {
     public BasicPolyBucket polyBucket(String storage) {
         File file = fetchFile(storage, JSON_FILE);
         try (FileReader fileReader = new FileReader(file)) {
-            return SQLitePolyConstants.POLY_OBJECT_MAPPER.readValue(fileReader, BasicPolyBucket.class);
+            return EmbeddedPolyConstants.POLY_OBJECT_MAPPER.readValue(fileReader, BasicPolyBucket.class);
         } catch (Exception e) {
             throw new UnidevRuntimeException(e);
         }

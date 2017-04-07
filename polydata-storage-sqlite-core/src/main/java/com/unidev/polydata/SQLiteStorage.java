@@ -25,8 +25,8 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.Date;
 
-import static com.unidev.polydata.SQLitePolyConstants.POLY_OBJECT_MAPPER;
-import static com.unidev.polydata.SQLitePolyConstants.TAGS_POLY;
+import static com.unidev.polydata.EmbeddedPolyConstants.POLY_OBJECT_MAPPER;
+import static com.unidev.polydata.EmbeddedPolyConstants.TAGS_POLY;
 
 /**
  * Named polydata storage,
@@ -77,7 +77,7 @@ public class SQLiteStorage {
      * @return
      */
     public Optional<BasicPoly> fetchPoly(Connection connection, String id) {
-        return fetchRawPoly(connection, SQLitePolyConstants.DATA_KEY, id);
+        return fetchRawPoly(connection, EmbeddedPolyConstants.DATA_KEY, id);
     }
 
     /**
@@ -117,17 +117,17 @@ public class SQLiteStorage {
             String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(poly);
 
             String rawTags = null;
-            Collection tags = poly.fetch(SQLitePolyConstants.TAGS_KEY);
+            Collection tags = poly.fetch(EmbeddedPolyConstants.TAGS_KEY);
             if (tags != null) {
                 rawTags = POLY_OBJECT_MAPPER.writeValueAsString(tags);
             }
 
-            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + SQLitePolyConstants.DATA_POLY + " WHERE _id = ?;");
+            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + EmbeddedPolyConstants.DATA_POLY + " WHERE _id = ?;");
             dataStatement.setString(1, poly._id());
             ResultSet dataResultSet = dataStatement.executeQuery();
             Date date = new Date();
             if (!dataResultSet.next()) { // insert
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(_id, tags, data, create_date, update_date) VALUES(?, ?, ?, ?, ?);");
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + EmbeddedPolyConstants.DATA_POLY + "(_id, tags, data, create_date, update_date) VALUES(?, ?, ?, ?, ?);");
                 preparedStatement.setString(1, poly._id());
                 preparedStatement.setString(2, rawTags);
                 preparedStatement.setObject(3, rawJSON);
@@ -136,7 +136,7 @@ public class SQLiteStorage {
                 preparedStatement.setObject(5, date);
                 preparedStatement.executeUpdate();
             } else { // update
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.DATA_POLY + "(id, _id, tags, data, create_date, update_date) VALUES(?, ?, ?, ?, ?,?);");
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + EmbeddedPolyConstants.DATA_POLY + "(id, _id, tags, data, create_date, update_date) VALUES(?, ?, ?, ?, ?,?);");
                 preparedStatement.setObject(1, dataResultSet.getObject("id"));
                 preparedStatement.setString(2, poly._id());
                 preparedStatement.setString(3, rawTags);
@@ -163,7 +163,7 @@ public class SQLiteStorage {
     public long fetchPolyCount(Connection connection, SQLitePolyQuery polyQuery) {
         try {
             PreparedStatement preparedStatement;
-            StringBuilder query = new StringBuilder("SELECT COUNT(*) AS count FROM " + SQLitePolyConstants.DATA_POLY + " WHERE 1=1 ");
+            StringBuilder query = new StringBuilder("SELECT COUNT(*) AS count FROM " + EmbeddedPolyConstants.DATA_POLY + " WHERE 1=1 ");
             preparedStatement = buildPolyQuery(polyQuery, false, connection, query);
             return preparedStatement.executeQuery().getLong("count");
         }catch (Exception e) {
@@ -181,7 +181,7 @@ public class SQLiteStorage {
     public List<BasicPoly> listPoly(Connection connection, SQLitePolyQuery polyQuery) {
         try {
             PreparedStatement preparedStatement;
-            StringBuilder query = new StringBuilder("SELECT * FROM " + SQLitePolyConstants.DATA_POLY + " WHERE 1=1 ");
+            StringBuilder query = new StringBuilder("SELECT * FROM " + EmbeddedPolyConstants.DATA_POLY + " WHERE 1=1 ");
             preparedStatement = buildPolyQuery(polyQuery, true, connection, query);
             return evaluateStatementToPolyList(preparedStatement);
         }catch (Exception e) {
@@ -196,7 +196,7 @@ public class SQLiteStorage {
         PreparedStatement preparedStatement;
 
         if (sqlitePolyQuery.getTag() != null) {
-            query.append(" AND " + SQLitePolyConstants.TAGS_KEY + " LIKE ?");
+            query.append(" AND " + EmbeddedPolyConstants.TAGS_KEY + " LIKE ?");
             params.put(id++, "%" + sqlitePolyQuery.getTag() + "%");
         }
 
@@ -230,7 +230,7 @@ public class SQLiteStorage {
      * @return
      */
     public boolean removePoly(Connection connection, String polyId) {
-        return removeRawPoly(connection, SQLitePolyConstants.DATA_POLY, polyId);
+        return removeRawPoly(connection, EmbeddedPolyConstants.DATA_POLY, polyId);
     }
 
     /**
@@ -245,18 +245,18 @@ public class SQLiteStorage {
             Optional<BasicPoly> tagById = fetchTagPoly(connection, tagPoly._id());
 
             if (!tagById.isPresent()) {
-                tagPoly.put(SQLitePolyConstants.COUNT_KEY, 1);
+                tagPoly.put(EmbeddedPolyConstants.COUNT_KEY, 1);
                 String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(tagPoly);
 
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + SQLitePolyConstants.TAGS_POLY + "(_id, count, data) VALUES(?, ?, ?);");
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + EmbeddedPolyConstants.TAGS_POLY + "(_id, count, data) VALUES(?, ?, ?);");
                 preparedStatement.setString(1, tagPoly._id());
                 preparedStatement.setLong(2, 1L);
                 preparedStatement.setObject(3, rawJSON);
                 preparedStatement.executeUpdate();
             } else {
-                tagPoly.put(SQLitePolyConstants.COUNT_KEY, ((int)tagById.get().fetch(SQLitePolyConstants.COUNT_KEY) + 1));
+                tagPoly.put(EmbeddedPolyConstants.COUNT_KEY, ((int)tagById.get().fetch(EmbeddedPolyConstants.COUNT_KEY) + 1));
                 String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(tagPoly);
-                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + SQLitePolyConstants.TAGS_POLY + " SET count = count + 1, data =? WHERE _id = ?;");
+                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + EmbeddedPolyConstants.TAGS_POLY + " SET count = count + 1, data =? WHERE _id = ?;");
                 preparedStatement.setString(1, rawJSON);
                 preparedStatement.setString(2, tagPoly._id());
                 preparedStatement.executeUpdate();
@@ -276,7 +276,7 @@ public class SQLiteStorage {
     public List<BasicPoly> fetchTags(Connection connection) {
 
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + SQLitePolyConstants.TAGS_POLY + " ORDER BY count DESC");
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + EmbeddedPolyConstants.TAGS_POLY + " ORDER BY count DESC");
             return evaluateStatementToPolyList(preparedStatement);
         } catch (SQLException e) {
             LOG.warn("Failed to fetch tags", e);
@@ -292,7 +292,7 @@ public class SQLiteStorage {
      * @return
      */
     public Optional<BasicPoly> fetchTagPoly(Connection connection, String id) {
-        return fetchRawPoly(connection, SQLitePolyConstants.TAGS_POLY, id);
+        return fetchRawPoly(connection, EmbeddedPolyConstants.TAGS_POLY, id);
     }
 
     // count tags
@@ -303,7 +303,7 @@ public class SQLiteStorage {
      * @return
      */
     public long fetchTagCount(Connection connection) {
-        return fetchPolyCount(connection, SQLitePolyConstants.TAGS_POLY);
+        return fetchPolyCount(connection, EmbeddedPolyConstants.TAGS_POLY);
     }
 
     // persist tag index
@@ -390,7 +390,7 @@ public class SQLiteStorage {
             preparedStatement.setString(1, tag);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
-                String rawJSON = resultSet.getString(SQLitePolyConstants.DATA_KEY);
+                String rawJSON = resultSet.getString(EmbeddedPolyConstants.DATA_KEY);
                 return Optional.of(POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class));
             }
             return Optional.empty();
@@ -475,7 +475,7 @@ public class SQLiteStorage {
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
-                String rawJSON = resultSet.getString(SQLitePolyConstants.DATA_KEY);
+                String rawJSON = resultSet.getString(EmbeddedPolyConstants.DATA_KEY);
                 BasicPoly polyRecord = POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class);
                 polyList.add(polyRecord);
             }
@@ -497,7 +497,7 @@ public class SQLiteStorage {
             preparedStatement.setString(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
-                String rawJSON = resultSet.getString(SQLitePolyConstants.DATA_KEY);
+                String rawJSON = resultSet.getString(EmbeddedPolyConstants.DATA_KEY);
                 return Optional.of(POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class));
             }
             return Optional.empty();

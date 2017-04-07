@@ -41,11 +41,11 @@ public class SQLiteStorageTest {
 
             BasicPoly poly = BasicPoly.newPoly("potato");
             poly.put("tomato", "qwe");
-            poly.put(SQLitePolyConstants.TAGS_KEY, Arrays.asList("123", "xyz"));
+            poly.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("123", "xyz"));
 
             BasicPoly poly2 = BasicPoly.newPoly("tomato");
             poly2.put("tomato", "qwe");
-            poly2.put(SQLitePolyConstants.TAGS_KEY, Arrays.asList("123", "xyz"));
+            poly2.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("123", "xyz"));
 
             Optional<BasicPoly> optinalPoly = sqLiteStorage.fetchPoly(connection, poly._id());
             assertThat(optinalPoly.isPresent(), is(false));
@@ -97,11 +97,11 @@ public class SQLiteStorageTest {
 
         BasicPoly poly1 = BasicPoly.newPoly("potato1");
         poly1.put("tomato", "qwe");
-        poly1.put(SQLitePolyConstants.TAGS_KEY, Arrays.asList("123", "xyz"));
+        poly1.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("123", "xyz"));
 
         BasicPoly poly2 = BasicPoly.newPoly("potato2");
         poly2.put("custom", "value");
-        poly2.put(SQLitePolyConstants.TAGS_KEY, Arrays.asList("tag1", "tag2"));
+        poly2.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("tag1", "tag2"));
 
         try (Connection connection = sqLiteStorage.openDb()) {
             sqLiteStorage.persistPoly(connection, poly1);
