@@ -41,7 +41,7 @@ public class H2Storage extends AbstractEmbeddedStorage {
         Flyway flyway = new Flyway();
         flyway.setDataSource("jdbc:h2:" + dbFile, null, null);
         flyway.setOutOfOrder(true);
-        flyway.setLocations("db/sqlitestorage");
+        flyway.setLocations("db/polystorage");
         flyway.migrate();
     }
 
