@@ -41,8 +41,6 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
         }
     }
 
-    private String dbFile;
-
     public SQLiteStorage(String dbFile) {
         super(dbFile);
     }
