@@ -66,7 +66,7 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
         Flyway flyway = new Flyway();
         flyway.setDataSource("jdbc:sqlite:" + dbFile, null, null);
         flyway.setOutOfOrder(true);
-        flyway.setLocations("db/sqlitestorage");
+        flyway.setLocations("db/polystorage");
         flyway.migrate();
     }
 
