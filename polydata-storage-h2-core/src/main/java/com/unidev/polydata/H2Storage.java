@@ -109,12 +109,28 @@ public class H2Storage extends AbstractEmbeddedStorage {
 
     @Override
     public long fetchPolyCount(Connection connection, EmbeddedPolyQuery polyQuery) {
-        return 0;
+        try {
+            PreparedStatement preparedStatement;
+            StringBuilder query = new StringBuilder("SELECT COUNT(*) AS count FROM " + EmbeddedPolyConstants.DATA_POLY + " WHERE 1=1 ");
+            preparedStatement = buildPolyQuery(polyQuery, false, connection, query);
+            return preparedStatement.executeQuery().getLong("count");
+        }catch (Exception e) {
+            LOG.warn("Failed to fetch polys {}", dbFile, e);
+            throw new EmbeddedStorageException(e);
+        }
     }
 
     @Override
     public List<BasicPoly> listPoly(Connection connection, EmbeddedPolyQuery polyQuery) {
-        return null;
+        try {
+            PreparedStatement preparedStatement;
+            StringBuilder query = new StringBuilder("SELECT * FROM " + EmbeddedPolyConstants.DATA_POLY + " WHERE 1=1 ");
+            preparedStatement = buildPolyQuery(polyQuery, true, connection, query);
+            return evaluateStatementToPolyList(preparedStatement);
+        }catch (Exception e) {
+            LOG.warn("Failed to fetch polys {}", dbFile, e);
+            throw new EmbeddedStorageException(e);
+        }
     }
 
     @Override
@@ -193,5 +209,57 @@ public class H2Storage extends AbstractEmbeddedStorage {
     @Override
     public boolean removeRawPoly(Connection connection, String table, String id) {
         return false;
+    }
+
+    private PreparedStatement buildPolyQuery(EmbeddedPolyQuery sqlitePolyQuery, boolean includePagination, Connection connection, StringBuilder query) throws SQLException {
+        Integer id = 1;
+        Map<Integer, Object> params = new HashMap<>();
+        PreparedStatement preparedStatement;
+
+        if (sqlitePolyQuery.getTag() != null) {
+            query.append(" AND " + EmbeddedPolyConstants.TAGS_KEY + " LIKE ?");
+            params.put(id++, "%" + sqlitePolyQuery.getTag() + "%");
+        }
+
+
+
+        if (includePagination) {
+            if (sqlitePolyQuery.getItemPerPage() != null) {
+
+                if (Boolean.TRUE.equals(sqlitePolyQuery.getRandomOrder())) {
+                    query.append(" ORDER BY RANDOM() ");
+                } else {
+                    query.append(" ORDER BY update_date DESC ");
+                }
+
+                query.append("  LIMIT ? OFFSET ?");
+                params.put(id++, sqlitePolyQuery.getItemPerPage());
+                params.put(id++, sqlitePolyQuery.getItemPerPage() * (sqlitePolyQuery.getPage()));
+            }
+        }
+
+        preparedStatement = connection.prepareStatement(query.toString());
+        for (Map.Entry<Integer, Object> entry : params.entrySet()) {
+            preparedStatement.setObject(entry.getKey(), entry.getValue());
+        }
+        return preparedStatement;
+    }
+
+    private List<BasicPoly> evaluateStatementToPolyList(PreparedStatement preparedStatement) {
+
+        List<BasicPoly> polyList = new ArrayList<>();
+        try {
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                String rawJSON = resultSet.getString(EmbeddedPolyConstants.DATA_KEY);
+                BasicPoly polyRecord = POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class);
+                polyList.add(polyRecord);
+            }
+            return polyList;
+        } catch (Exception e) {
+            LOG.warn("Failed to evaluate statement {}", dbFile, e);
+            throw new EmbeddedStorageException(e);
+        }
     }
 }
