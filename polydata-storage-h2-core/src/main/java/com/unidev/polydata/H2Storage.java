@@ -6,13 +6,10 @@ import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.sql.*;
+import java.util.*;
+
+import static com.unidev.polydata.EmbeddedPolyConstants.POLY_OBJECT_MAPPER;
 
 public class H2Storage extends AbstractEmbeddedStorage {
 
@@ -51,22 +48,63 @@ public class H2Storage extends AbstractEmbeddedStorage {
 
     @Override
     public Optional<BasicPoly> fetchPoly(Connection connection, String id) {
-        return null;
+        return fetchRawPoly(connection, EmbeddedPolyConstants.DATA_KEY, id);
     }
 
     @Override
     public Map<String, Optional<BasicPoly>> fetchPolyMap(Connection connection, Collection<String> polyIds) {
-        return null;
+        Map<String, Optional<BasicPoly>> result = new HashMap<>();
+        for(String id : polyIds) {
+            result.put(id, fetchPoly(connection, id));
+        }
+        return result;
     }
 
     @Override
     public Collection<Optional<BasicPoly>> fetchPolys(Connection connection, Collection<String> polyIds) {
-        return null;
+        List<Optional<BasicPoly>> polys = new ArrayList<>();
+        for(String id : polyIds) {
+            polys.add(fetchPoly(connection, id));
+        }
+        return polys;
     }
 
     @Override
     public BasicPoly persistPoly(Connection connection, BasicPoly poly) {
-        return null;
+        try {
+            String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(poly);
+
+            String rawTags = null;
+            Collection tags = poly.fetch(EmbeddedPolyConstants.TAGS_KEY);
+            if (tags != null) {
+                rawTags = POLY_OBJECT_MAPPER.writeValueAsString(tags);
+            }
+
+            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + EmbeddedPolyConstants.DATA_POLY + " WHERE _id = ?;");
+            dataStatement.setString(1, poly._id());
+            ResultSet dataResultSet = dataStatement.executeQuery();
+            java.util.Date date = new java.util.Date();
+            if (!dataResultSet.next()) { // insert
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + EmbeddedPolyConstants.DATA_POLY + "(_id, tags, data, create_date, update_date) VALUES(?, ?, ?, ?, ?);");
+                preparedStatement.setString(1, poly._id());
+                preparedStatement.setString(2, rawTags);
+                preparedStatement.setObject(3, rawJSON);
+
+                preparedStatement.setObject(4, date);
+                preparedStatement.setObject(5, date);
+                preparedStatement.executeUpdate();
+            } else { // update
+                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + EmbeddedPolyConstants.DATA_POLY + " SET tags = ?, data = ? WHERE _id = ?  ;");
+                preparedStatement.setObject(1, rawTags);
+                preparedStatement.setString(2, rawJSON);
+                preparedStatement.setString(3, poly._id());
+                preparedStatement.executeUpdate();
+            }
+        }catch (Exception e) {
+            LOG.error("Failed to persist poly {}", poly, e);
+            throw new EmbeddedStorageException(e);
+        }
+        return poly;
     }
 
     @Override
@@ -136,7 +174,20 @@ public class H2Storage extends AbstractEmbeddedStorage {
 
     @Override
     public Optional<BasicPoly> fetchRawPoly(Connection connection, String table, String id) {
-        return null;
+        PreparedStatement preparedStatement;
+        try {
+            preparedStatement = connection.prepareStatement("SELECT * FROM " + table + " WHERE _id = ?");
+            preparedStatement.setString(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                String rawJSON = resultSet.getString(EmbeddedPolyConstants.DATA_KEY);
+                return Optional.of(POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class));
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+            LOG.warn("Failed to fetch support poly {} {} {}", table, id, dbFile, e);
+            return Optional.empty();
+        }
     }
 
     @Override

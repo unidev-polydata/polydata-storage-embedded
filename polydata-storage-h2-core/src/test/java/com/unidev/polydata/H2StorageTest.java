@@ -24,22 +24,25 @@ public class H2StorageTest {
 
     @Before
     public void setup() {
-        dbFile = new File("/tmp/testdb.h2");
+        dbFile = new File("/tmp/testdb");
         dbFile.delete();
+
+        File realDbFile = new File("/tmp/testdb.mv.db");
+        realDbFile.delete();
     }
 
     @Test
     public void testStorageMigration() throws EmbeddedStorageException {
-        H2Storage sqLiteStorage = new H2Storage(dbFile.getAbsolutePath());
-        sqLiteStorage.migrateStorage();
+        H2Storage h2Storage = new H2Storage(dbFile.getAbsolutePath());
+        h2Storage.migrateStorage();
     }
 
     @Test
     public void testPersistingPoly() throws Exception {
-        H2Storage sqLiteStorage = new H2Storage(dbFile.getAbsolutePath());
-        sqLiteStorage.migrateStorage();
+        H2Storage h2Storage = new H2Storage(dbFile.getAbsolutePath());
+        h2Storage.migrateStorage();
 
-        try (Connection connection = sqLiteStorage.openDb()) {
+        try (Connection connection = h2Storage.openDb()) {
 
             BasicPoly poly = BasicPoly.newPoly("potato");
             poly.put("tomato", "qwe");
@@ -49,13 +52,13 @@ public class H2StorageTest {
             poly2.put("tomato", "qwe");
             poly2.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("123", "xyz"));
 
-            Optional<BasicPoly> optinalPoly = sqLiteStorage.fetchPoly(connection, poly._id());
+            Optional<BasicPoly> optinalPoly = h2Storage.fetchPoly(connection, poly._id());
             assertThat(optinalPoly.isPresent(), is(false));
 
-            sqLiteStorage.persistPoly(connection, poly);
-            sqLiteStorage.persistPoly(connection, poly2);
+            h2Storage.persistPoly(connection, poly);
+            h2Storage.persistPoly(connection, poly2);
 
-            Optional<BasicPoly> dbPoly = sqLiteStorage.fetchPoly(connection, poly._id());
+            Optional<BasicPoly> dbPoly = h2Storage.fetchPoly(connection, poly._id());
             assertThat(dbPoly.isPresent(), is(true));
 
             assertThat(dbPoly.get()._id(), is("potato"));
@@ -64,9 +67,9 @@ public class H2StorageTest {
             poly.put("new-field", "987");
             poly.put("tomato", "000");
 
-            sqLiteStorage.persistPoly(connection, poly);
+            h2Storage.persistPoly(connection, poly);
 
-            Optional<BasicPoly> dbPoly2 = sqLiteStorage.fetchPoly(connection, poly._id());
+            Optional<BasicPoly> dbPoly2 = h2Storage.fetchPoly(connection, poly._id());
             assertThat(dbPoly2.isPresent(), is(true));
 
             assertThat(dbPoly2.get()._id(), is("potato"));
@@ -75,10 +78,10 @@ public class H2StorageTest {
 
             // batch poly fetching
 
-            Collection<Optional<BasicPoly>> polys = sqLiteStorage.fetchPolys(connection, Arrays.asList("potato", "tomato", "random-id"));
+            Collection<Optional<BasicPoly>> polys = h2Storage.fetchPolys(connection, Arrays.asList("potato", "tomato", "random-id"));
             assertThat(polys.size(), is(3));
 
-            Map<String, Optional<BasicPoly>> fetchPolyMap = sqLiteStorage.fetchPolyMap(connection, Arrays.asList("potato", "tomato", "random-id"));
+            Map<String, Optional<BasicPoly>> fetchPolyMap = h2Storage.fetchPolyMap(connection, Arrays.asList("potato", "tomato", "random-id"));
             assertThat(fetchPolyMap.size(), is(3));
 
             assertThat(fetchPolyMap.get("random-id").isPresent(), is(false));
