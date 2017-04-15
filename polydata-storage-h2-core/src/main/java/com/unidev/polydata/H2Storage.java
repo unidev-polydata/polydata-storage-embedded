@@ -192,27 +192,54 @@ public class H2Storage extends AbstractEmbeddedStorage {
 
     @Override
     public BasicPoly persistIndexTag(Connection connection, String tagIndex, String documentId, BasicPoly data) {
+
+        Flyway flyway = new Flyway();
+        flyway.setDataSource("jdbc:h2:" + dbFile, null, null);
+        flyway.setOutOfOrder(true);
+        flyway.setLocations("db/polyindex");
+        flyway.setSchemas(tagIndex);
+        flyway.migrate();
+
         return null;
     }
 
     @Override
     public List<BasicPoly> fetchTagIndex(Connection connection, String tagIndex) {
-        return null;
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + tagIndex + ".tag_index" + " ");
+            return evaluateStatementToPolyList(preparedStatement);
+        } catch (SQLException e) {
+            LOG.warn("Failed to fetch tags", e);
+            return Collections.EMPTY_LIST;
+        }
     }
 
     @Override
     public Optional<BasicPoly> fetchTagIndexPoly(Connection connection, String tagIndex, String documentId) {
-        return null;
+        return fetchRawPoly(connection, tagIndex + ".tag_index", documentId);
     }
 
     @Override
     public Optional<BasicPoly> fetchTagIndexPolyByTag(Connection connection, String tagIndex, String tag) {
-        return null;
+        PreparedStatement preparedStatement;
+        try {
+            preparedStatement = connection.prepareStatement("SELECT * FROM " +tagIndex + ".tag_index WHERE tag = ?");
+            preparedStatement.setString(1, tag);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                String rawJSON = resultSet.getString(EmbeddedPolyConstants.DATA_KEY);
+                return Optional.of(POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class));
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+            LOG.warn("Failed to fetch support poly {} {} {}", tagIndex, tag, dbFile, e);
+            return Optional.empty();
+        }
     }
 
     @Override
     public long fetchTagIndexCount(Connection connection, String tagIndex) {
-        return 0;
+        return fetchPolyCount(connection, tagIndex + ".tag_index");
     }
 
     @Override
