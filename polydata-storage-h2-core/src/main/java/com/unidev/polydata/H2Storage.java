@@ -10,6 +10,7 @@ import java.sql.*;
 import java.util.*;
 
 import static com.unidev.polydata.EmbeddedPolyConstants.POLY_OBJECT_MAPPER;
+import static com.unidev.polydata.EmbeddedPolyConstants.TAGS_POLY;
 
 public class H2Storage extends AbstractEmbeddedStorage {
 
@@ -80,11 +81,10 @@ public class H2Storage extends AbstractEmbeddedStorage {
                 rawTags = POLY_OBJECT_MAPPER.writeValueAsString(tags);
             }
 
-            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + EmbeddedPolyConstants.DATA_POLY + " WHERE _id = ?;");
-            dataStatement.setString(1, poly._id());
-            ResultSet dataResultSet = dataStatement.executeQuery();
+            Optional<BasicPoly> polyById = fetchRawPoly(connection, EmbeddedPolyConstants.DATA_KEY, poly._id());
+
             java.util.Date date = new java.util.Date();
-            if (!dataResultSet.next()) { // insert
+            if (!polyById.isPresent()) { // insert
                 PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + EmbeddedPolyConstants.DATA_POLY + "(_id, tags, data, create_date, update_date) VALUES(?, ?, ?, ?, ?);");
                 preparedStatement.setString(1, poly._id());
                 preparedStatement.setString(2, rawTags);
@@ -135,22 +135,52 @@ public class H2Storage extends AbstractEmbeddedStorage {
 
     @Override
     public boolean removePoly(Connection connection, String polyId) {
-        return false;
+        return removeRawPoly(connection, EmbeddedPolyConstants.DATA_POLY, polyId);
     }
 
     @Override
     public BasicPoly persistTag(Connection connection, BasicPoly tagPoly) {
-        return null;
+        try {
+            Optional<BasicPoly> tagById = fetchTagPoly(connection, tagPoly._id());
+
+            if (!tagById.isPresent()) {
+                tagPoly.put(EmbeddedPolyConstants.COUNT_KEY, 1);
+                String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(tagPoly);
+
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + EmbeddedPolyConstants.TAGS_POLY + "(_id, count, data) VALUES(?, ?, ?);");
+                preparedStatement.setString(1, tagPoly._id());
+                preparedStatement.setLong(2, 1L);
+                preparedStatement.setObject(3, rawJSON);
+                preparedStatement.executeUpdate();
+            } else {
+                tagPoly.put(EmbeddedPolyConstants.COUNT_KEY, ((int)tagById.get().fetch(EmbeddedPolyConstants.COUNT_KEY) + 1));
+                String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(tagPoly);
+                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + EmbeddedPolyConstants.TAGS_POLY + " SET count = count + 1, data =? WHERE _id = ?;");
+                preparedStatement.setString(1, rawJSON);
+                preparedStatement.setString(2, tagPoly._id());
+                preparedStatement.executeUpdate();
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to persist tag poly {}", tagPoly, e);
+            throw new EmbeddedStorageException(e);
+        }
+        return fetchRawPoly(connection, TAGS_POLY, tagPoly._id()).orElseThrow(EmbeddedStorageException::new);
     }
 
     @Override
     public List<BasicPoly> fetchTags(Connection connection) {
-        return null;
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + EmbeddedPolyConstants.TAGS_POLY + " ORDER BY count DESC");
+            return evaluateStatementToPolyList(preparedStatement);
+        } catch (SQLException e) {
+            LOG.warn("Failed to fetch tags", e);
+            return Collections.EMPTY_LIST;
+        }
     }
 
     @Override
     public Optional<BasicPoly> fetchTagPoly(Connection connection, String id) {
-        return null;
+        return fetchRawPoly(connection, EmbeddedPolyConstants.TAGS_POLY, id);
     }
 
     @Override
