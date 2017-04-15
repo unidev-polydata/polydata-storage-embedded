@@ -17,7 +17,6 @@ import static org.hamcrest.core.Is.*;
 /**
  * SQLite storage tests
  */
-@Ignore
 public class H2StorageTest {
 
     File dbFile;
