@@ -47,6 +47,15 @@ public class H2Storage extends AbstractEmbeddedStorage {
         flyway.migrate();
     }
 
+    public void migrateTagIndexStorage(String tagIndex) {
+        Flyway flyway = new Flyway();
+        flyway.setDataSource("jdbc:h2:" + dbFile, null, null);
+        flyway.setOutOfOrder(true);
+        flyway.setLocations("db/tagindex");
+        flyway.setSchemas(tagIndex.toUpperCase());
+        flyway.migrate();
+    }
+
     @Override
     public Optional<BasicPoly> fetchPoly(Connection connection, String id) {
         return fetchRawPoly(connection, EmbeddedPolyConstants.DATA_KEY, id);
@@ -192,15 +201,27 @@ public class H2Storage extends AbstractEmbeddedStorage {
 
     @Override
     public BasicPoly persistIndexTag(Connection connection, String tagIndex, String documentId, BasicPoly data) {
+        try {
+            String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(data);
 
-        Flyway flyway = new Flyway();
-        flyway.setDataSource("jdbc:h2:" + dbFile, null, null);
-        flyway.setOutOfOrder(true);
-        flyway.setLocations("db/polyindex");
-        flyway.setSchemas(tagIndex);
-        flyway.migrate();
+            Optional<BasicPoly> tagIndexById = fetchRawPoly(connection, tagIndex + ".tag_index", documentId);
 
-        return null;
+            if (!tagIndexById.isPresent()) {
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + tagIndex + ".tag_index (_id, data) VALUES(?, ?);");
+                preparedStatement.setString(1, documentId);
+                preparedStatement.setObject(2, rawJSON);
+                preparedStatement.executeUpdate();
+            } else {
+                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + tagIndex + ".tag_index SET data =? WHERE _id=?;");
+                preparedStatement.setObject(1, rawJSON);
+                preparedStatement.setString(2, documentId);
+                preparedStatement.executeUpdate();
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to persist tag index poly {}", data, e);
+            throw new EmbeddedStorageException(e);
+        }
+        return fetchRawPoly(connection, tagIndex+ ".tag_index", documentId).orElseThrow(EmbeddedStorageException::new);
     }
 
     @Override
@@ -223,8 +244,7 @@ public class H2Storage extends AbstractEmbeddedStorage {
     public Optional<BasicPoly> fetchTagIndexPolyByTag(Connection connection, String tagIndex, String tag) {
         PreparedStatement preparedStatement;
         try {
-            preparedStatement = connection.prepareStatement("SELECT * FROM " +tagIndex + ".tag_index WHERE tag = ?");
-            preparedStatement.setString(1, tag);
+            preparedStatement = connection.prepareStatement("SELECT * FROM " +tagIndex + ".tag_index ");
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
                 String rawJSON = resultSet.getString(EmbeddedPolyConstants.DATA_KEY);

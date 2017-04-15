@@ -180,6 +180,7 @@ public class H2StorageTest {
     public void testTagIndexOperations() throws Exception {
         H2Storage sqLiteStorage = new H2Storage(dbFile.getAbsolutePath());
         sqLiteStorage.migrateStorage();
+        sqLiteStorage.migrateTagIndexStorage("tag_index_potato");
 
         BasicPoly basicPoly = BasicPoly.newPoly();
         basicPoly._id("qwe");
