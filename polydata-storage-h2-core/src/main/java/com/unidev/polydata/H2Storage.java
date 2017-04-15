@@ -249,7 +249,14 @@ public class H2Storage extends AbstractEmbeddedStorage {
 
     @Override
     public boolean removeRawPoly(Connection connection, String table, String id) {
-        return false;
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + table + " WHERE _id = ?");
+            preparedStatement.setString(1, id);
+            return preparedStatement.executeUpdate() != 0;
+        } catch (Exception e) {
+            LOG.error("Failed to remove poly {} {} {}", table, id, dbFile, e);
+            return false;
+        }
     }
 
     private PreparedStatement buildPolyQuery(EmbeddedPolyQuery sqlitePolyQuery, boolean includePagination, Connection connection, StringBuilder query) throws SQLException {
