@@ -215,6 +215,9 @@ public class H2StorageTest {
 
         sqLiteStorage.persistTag(connection, BasicPoly.newPoly("test_tag_2"));
 
+        long tagCount = sqLiteStorage.fetchTagCount(connection);
+        assertThat(tagCount, is(2L));
+
         List<BasicPoly> tagList = sqLiteStorage.fetchTags(connection);
 
         assertThat(tagList, is(notNullValue()));
@@ -232,6 +235,9 @@ public class H2StorageTest {
 
         Optional<BasicPoly> test_tag_3 = sqLiteStorage.fetchTagPoly(connection, "test_tag_3");
         assertThat(test_tag_3.isPresent(), is(false));
+
+
+
     }
 
 

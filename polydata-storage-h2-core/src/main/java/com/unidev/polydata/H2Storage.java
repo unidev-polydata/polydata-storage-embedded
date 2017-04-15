@@ -185,7 +185,7 @@ public class H2Storage extends AbstractEmbeddedStorage {
 
     @Override
     public long fetchTagCount(Connection connection) {
-        return 0;
+        return fetchPolyCount(connection, EmbeddedPolyConstants.TAGS_POLY);
     }
 
     @Override
@@ -215,7 +215,16 @@ public class H2Storage extends AbstractEmbeddedStorage {
 
     @Override
     public Long fetchPolyCount(Connection connection, String table) {
-        return null;
+        PreparedStatement preparedStatement;
+        try {
+            preparedStatement = connection.prepareStatement("SELECT COUNT(*) AS item_count FROM " + table + "");
+            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet.next();
+            return resultSet.getLong("item_count");
+        } catch (SQLException e) {
+            LOG.warn("Failed to fetch poly count from {}", table, e);
+            throw new EmbeddedStorageException(e);
+        }
     }
 
     @Override
