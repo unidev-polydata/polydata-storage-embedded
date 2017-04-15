@@ -113,7 +113,9 @@ public class H2Storage extends AbstractEmbeddedStorage {
             PreparedStatement preparedStatement;
             StringBuilder query = new StringBuilder("SELECT COUNT(*) AS count FROM " + EmbeddedPolyConstants.DATA_POLY + " WHERE 1=1 ");
             preparedStatement = buildPolyQuery(polyQuery, false, connection, query);
-            return preparedStatement.executeQuery().getLong("count");
+            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet.next();
+            return resultSet.getLong("count");
         }catch (Exception e) {
             LOG.warn("Failed to fetch polys {}", dbFile, e);
             throw new EmbeddedStorageException(e);
