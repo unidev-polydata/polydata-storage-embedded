@@ -165,11 +165,6 @@ public abstract class AbstractEmbeddedStorage {
      */
     public abstract Optional<BasicPoly> fetchTagIndexPoly(Connection connection, String tagIndex, String documentId);
 
-    /**
-     * Fetch tag index by tag
-     */
-    public abstract Optional<BasicPoly> fetchTagIndexPolyByTag(Connection connection, String tagIndex, String tag);
-
     // count tags
 
     /**

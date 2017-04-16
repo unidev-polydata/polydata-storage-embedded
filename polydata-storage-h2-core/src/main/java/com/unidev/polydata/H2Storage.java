@@ -241,23 +241,6 @@ public class H2Storage extends AbstractEmbeddedStorage {
     }
 
     @Override
-    public Optional<BasicPoly> fetchTagIndexPolyByTag(Connection connection, String tagIndex, String tag) {
-        PreparedStatement preparedStatement;
-        try {
-            preparedStatement = connection.prepareStatement("SELECT * FROM " +tagIndex + ".tag_index ");
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                String rawJSON = resultSet.getString(EmbeddedPolyConstants.DATA_KEY);
-                return Optional.of(POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class));
-            }
-            return Optional.empty();
-        } catch (Exception e) {
-            LOG.warn("Failed to fetch support poly {} {} {}", tagIndex, tag, dbFile, e);
-            return Optional.empty();
-        }
-    }
-
-    @Override
     public long fetchTagIndexCount(Connection connection, String tagIndex) {
         return fetchPolyCount(connection, tagIndex + ".tag_index");
     }
