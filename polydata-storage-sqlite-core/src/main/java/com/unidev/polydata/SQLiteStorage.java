@@ -20,6 +20,7 @@ import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.sql.*;
 import java.sql.Date;
 import java.text.MessageFormat;
@@ -276,7 +277,6 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
      * @return
      */
     public List<BasicPoly> fetchTags(Connection connection) {
-
         try {
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + EmbeddedPolyConstants.TAGS_POLY + " ORDER BY count DESC");
             return evaluateStatementToPolyList(preparedStatement);
@@ -318,6 +318,7 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
      */
     public List<BasicPoly> fetchTagIndex(Connection connection, String tagIndex) {
         try {
+
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + tagIndex + " ");
             return evaluateStatementToPolyList(preparedStatement);
         } catch (SQLException e) {
@@ -331,27 +332,7 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
      * @return
      */
     public Optional<BasicPoly> fetchTagIndexPoly(Connection connection, String tagIndex, String documentId) {
-        return fetchRawPoly(connection, tagIndex, documentId);
-    }
-
-    /**
-     * Fetch tag index by tag
-     */
-    public Optional<BasicPoly> fetchTagIndexPolyByTag(Connection connection, String tagIndex, String tag) {
-        PreparedStatement preparedStatement;
-        try {
-            preparedStatement = connection.prepareStatement("SELECT * FROM " + tagIndex + " WHERE tag = ?");
-            preparedStatement.setString(1, tag);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                String rawJSON = resultSet.getString(EmbeddedPolyConstants.DATA_KEY);
-                return Optional.of(POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class));
-            }
-            return Optional.empty();
-        } catch (Exception e) {
-            LOG.warn("Failed to fetch support poly {} {} {}", tagIndex, tag, dbFile, e);
-            return Optional.empty();
-        }
+        return fetchRawPoly(connection, tagIndex + ".tag_index", documentId);
     }
 
     // count tags
@@ -361,7 +342,7 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
      * @return
      */
     public long fetchTagIndexCount(Connection connection, String tagIndex) {
-        return fetchPolyCount(connection, tagIndex);
+        return fetchPolyCount(connection, tagIndex + ".tag_index");
     }
 
     /**
@@ -445,79 +426,41 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
      */
     public BasicPoly persistIndexTag(Connection connection, String tagIndex, String documentId, BasicPoly data) {
         try {
-
-            PreparedStatement checkTableStatement = connection.prepareStatement("SELECT COUNT(name) AS count FROM sqlite_master WHERE name=?");
-            checkTableStatement.setString(1, tagIndex);
-            if (checkTableStatement.executeQuery().getLong("count") == 0) {
-                createIndexTagStorage(connection, tagIndex);
-            }
-
             String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(data);
 
-            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + tagIndex + " WHERE _id = ?;");
+            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + tagIndex + ".tag_index WHERE _id = ?;");
             dataStatement.setString(1, documentId);
             ResultSet dataResultSet = dataStatement.executeQuery();
 
             if (!dataResultSet.next()) {
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + tagIndex + "(_id,tag, data) VALUES(?,?, ?);");
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + tagIndex + ".tag_index(_id, data) VALUES(?, ?);");
                 preparedStatement.setString(1, documentId);
-                preparedStatement.setString(2, data._id());
-                preparedStatement.setObject(3, rawJSON);
+                preparedStatement.setObject(2, rawJSON);
                 preparedStatement.executeUpdate();
             } else {
-                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + tagIndex + " SET _id = ?, tag = ?, data =? WHERE id=?;");
-                preparedStatement.setString(1, documentId);
-                preparedStatement.setString(2, data._id());
-                preparedStatement.setObject(3, rawJSON);
-                preparedStatement.setObject(4, dataResultSet.getObject("id"));
+                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + tagIndex + ".tag_index SET data=? WHERE _id=?;");
+                preparedStatement.setString(1, rawJSON);
+                preparedStatement.setString(2, documentId);
                 preparedStatement.executeUpdate();
             }
         } catch (Exception e) {
             LOG.error("Failed to persist tag index poly {}", data, e);
             throw new EmbeddedStorageException(e);
         }
-        return fetchRawPoly(connection, tagIndex, documentId).orElseThrow(EmbeddedStorageException::new);
+        return fetchRawPoly(connection, tagIndex + ".tag_index", documentId).orElseThrow(EmbeddedStorageException::new);
 
     }
 
-    private final static String TAG_INDEX_TABLE =
-            "CREATE TABLE {0} (\n" +
-                    "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-                    "  _id TEXT,\n" +
-                    "  tag TEXT,\n" +
-                    "  data JSON,\n" +
-                    "create_date datetime DEFAULT CURRENT_TIMESTAMP," +
-                    "update_date datetime DEFAULT CURRENT_TIMESTAMP" +
-                    ");\n" +
-                    "\n" +
-                    "CREATE INDEX {0}_id_idx ON {0} (_id);" +
-                    "CREATE INDEX {0}_tag_idx ON {0} (tag);" +
-                    "CREATE INDEX {0}_update_date_idx ON {0} (update_date);" +
-                    "";
-    private final static String TAG_INDEX_TABLE_UPDATE =
-            "ALTER TABLE {0} ADD  create_date datetime ;\n" +
-                    "UPDATE {0} SET create_date = datetime();\n" +
-                    "ALTER TABLE {0} ADD  update_date datetime ;\n" +
-                    "UPDATE {0} SET update_date = datetime();\n" +
-                    "CREATE INDEX {0}_update_date_idx ON {0} (update_date);";
+    public void attachTagIndexDb(Connection connection, String tagIndex) throws SQLException {
+        File tagIndexFile = new File(new File(dbFile).getParentFile(), tagIndex + ".db");
 
-    private void createIndexTagStorage(Connection connection, String tagIndex) throws SQLException {
+        Flyway flyway = new Flyway();
+        flyway.setDataSource("jdbc:sqlite:" + tagIndexFile.getAbsolutePath(), null, null);
+        flyway.setOutOfOrder(true);
+        flyway.setLocations("db/polyindex");
+        flyway.migrate();
 
-        PreparedStatement checkTableStatement = connection.prepareStatement("SELECT COUNT(name) AS count FROM sqlite_master WHERE name=?");
-        checkTableStatement.setString(1, tagIndex);
-
-        if (checkTableStatement.executeQuery().getLong("count") == 0) { // create table
-            String rawSQL = MessageFormat.format(TAG_INDEX_TABLE, tagIndex);
-            try(Statement statement = connection.createStatement()) {
-                statement.execute(rawSQL);
-            }
-        }  else { // upgrade
-            String rawSQL = MessageFormat.format(TAG_INDEX_TABLE_UPDATE, tagIndex);
-            try(Statement statement = connection.createStatement()) {
-                statement.execute(rawSQL);
-            }
-        }
-
+        connection.prepareStatement("ATTACH DATABASE \"" + tagIndexFile.getAbsolutePath() + "\" AS " + tagIndex).execute();
     }
 
 }

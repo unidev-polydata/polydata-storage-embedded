@@ -182,6 +182,7 @@ public class SQLiteStorageTest {
         basicPoly.put("x", "y");
 
         Connection connection = sqLiteStorage.openDb();
+        sqLiteStorage.attachTagIndexDb(connection, "tag_index_potato");
 
         sqLiteStorage.persistIndexTag(connection, "tag_index_potato", "document_tomato", basicPoly);
         sqLiteStorage.persistIndexTag(connection, "tag_index_potato", "document_tomato", basicPoly);
@@ -192,11 +193,6 @@ public class SQLiteStorageTest {
         Optional<BasicPoly> dbPoly = sqLiteStorage.fetchTagIndexPoly(connection, "tag_index_potato", "document_tomato");
         assertThat(dbPoly.isPresent(), is(true));
         assertThat(dbPoly.get().fetch("x"), is("y"));
-
-        Optional<BasicPoly> dbPolyByTag = sqLiteStorage.fetchTagIndexPolyByTag(connection, "tag_index_potato", "qwe");
-        assertThat(dbPolyByTag.isPresent(), is(true));
-        assertThat(dbPolyByTag.get().fetch("x"), is("y"));
-
     }
 
     @Test
