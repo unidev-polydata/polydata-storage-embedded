@@ -37,6 +37,10 @@ public abstract class AbstractEmbeddedStorage {
         this.dbFile = dbFile;
     }
 
+    public String getDbFile() {
+        return dbFile;
+    }
+
     /**
      * Open poly storage connection
      * @return
