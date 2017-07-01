@@ -10,7 +10,7 @@ subprojects {
     apply plugin: 'idea'
 
     group = 'com.unidev.polydata'
-    version = '2.2.0-SNAPSHOT'
+    version = '2.3.0-SNAPSHOT'
 
     apply from: 'http://dev.local/gradle/uploadArchivesSftp.groovy'
     apply from: 'http://dev.local/gradle/defaultRepositories.groovy'
