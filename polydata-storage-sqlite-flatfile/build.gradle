@@ -1,0 +1,5 @@
+dependencies {
+    compile project(':polydata-storage-sqlite-core')
+    compile group: 'com.google.guava', name: 'guava', version: '22.0'
+    compile group: 'com.unidev.platform', name: 'unidev-utils', version: '2.0.0'
+}
