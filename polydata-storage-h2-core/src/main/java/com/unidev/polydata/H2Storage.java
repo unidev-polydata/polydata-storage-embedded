@@ -227,7 +227,7 @@ public class H2Storage extends AbstractEmbeddedStorage {
     @Override
     public List<BasicPoly> fetchTagIndex(Connection connection, String tagIndex) {
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + tagIndex + ".tag_index" + " ");
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + tagIndex + ".tag_index" + "  ORDER BY update_date DESC ");
             return evaluateStatementToPolyList(preparedStatement);
         } catch (SQLException e) {
             LOG.warn("Failed to fetch tags", e);
