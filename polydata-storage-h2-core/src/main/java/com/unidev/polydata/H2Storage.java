@@ -24,14 +24,22 @@ public class H2Storage extends AbstractEmbeddedStorage {
         }
     }
 
+    private String jdbcUrl;
+
     public H2Storage(String dbFile) {
         super(dbFile);
+        jdbcUrl = "jdbc:h2:" + dbFile;
+    }
+
+    public H2Storage(String dbFile, String jdbcUrl) {
+        super(dbFile);
+        this.jdbcUrl = jdbcUrl;
     }
 
     @Override
     public Connection openDb() {
         try {
-            return DriverManager.getConnection("jdbc:h2:" + dbFile);
+            return DriverManager.getConnection(jdbcUrl);
         } catch (SQLException e) {
             LOG.warn("Failed to open db {}", dbFile, e);
             throw new EmbeddedStorageException(e);
@@ -41,7 +49,7 @@ public class H2Storage extends AbstractEmbeddedStorage {
     @Override
     public void migrateStorage() {
         Flyway flyway = new Flyway();
-        flyway.setDataSource("jdbc:h2:" + dbFile, null, null);
+        flyway.setDataSource(jdbcUrl, null, null);
         flyway.setOutOfOrder(true);
         flyway.setLocations("db/polystorage");
         flyway.migrate();
@@ -49,7 +57,7 @@ public class H2Storage extends AbstractEmbeddedStorage {
 
     public void migrateTagIndexStorage(String tagIndex) {
         Flyway flyway = new Flyway();
-        flyway.setDataSource("jdbc:h2:" + dbFile, null, null);
+        flyway.setDataSource(jdbcUrl, null, null);
         flyway.setOutOfOrder(true);
         flyway.setLocations("db/tagindex");
         flyway.setSchemas(tagIndex.toUpperCase());
