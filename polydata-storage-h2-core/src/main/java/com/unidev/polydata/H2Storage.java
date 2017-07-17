@@ -24,7 +24,7 @@ public class H2Storage extends AbstractEmbeddedStorage {
         }
     }
 
-    private String jdbcUrl;
+    private final String jdbcUrl;
 
     public H2Storage(String dbFile) {
         super(dbFile);
@@ -295,6 +295,10 @@ public class H2Storage extends AbstractEmbeddedStorage {
             LOG.error("Failed to remove poly {} {} {}", table, id, dbFile, e);
             return false;
         }
+    }
+
+    public String getJdbcUrl() {
+        return jdbcUrl;
     }
 
     private PreparedStatement buildPolyQuery(EmbeddedPolyQuery sqlitePolyQuery, boolean includePagination, Connection connection, StringBuilder query) throws SQLException {
