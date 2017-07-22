@@ -266,6 +266,11 @@ public class H2StorageTest {
             assertThat(poly.isPresent(), is(true));
             assertThat(poly.get()._id(), is(category1._id()));
             assertThat(poly.get().fetch(EmbeddedPolyConstants.COUNT_KEY), is(2));
+
+            Optional<BasicPoly> tagPoly = storage
+                .fetchTagPoly(connection, CUSTOM_TAG_STORAGE, category2._id());
+            assertThat(tagPoly.isPresent(), is(true));
+
         }
     }
 
