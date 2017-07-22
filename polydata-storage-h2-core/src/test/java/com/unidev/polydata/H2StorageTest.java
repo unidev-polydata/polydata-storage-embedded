@@ -2,6 +2,7 @@ package com.unidev.polydata;
 
 import com.unidev.polydata.domain.BasicPoly;
 import com.unidev.polydata.domain.Poly;
+import java.sql.SQLException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -96,8 +97,8 @@ public class H2StorageTest {
 
     @Test
     public void testPolyQuery() throws Exception {
-        H2Storage sqLiteStorage = new H2Storage(dbFile.getAbsolutePath());
-        sqLiteStorage.migrateStorage();
+        H2Storage storage = new H2Storage(dbFile.getAbsolutePath());
+        storage.migrateStorage();
 
         BasicPoly poly1 = BasicPoly.newPoly("potato1");
         poly1.put("tomato", "qwe");
@@ -107,33 +108,33 @@ public class H2StorageTest {
         poly2.put("custom", "value");
         poly2.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("tag1", "tag2"));
 
-        try (Connection connection = sqLiteStorage.openDb()) {
-            sqLiteStorage.persistPoly(connection, poly1);
-            sqLiteStorage.persistPoly(connection, poly2);
+        try (Connection connection = storage.openDb()) {
+            storage.persistPoly(connection, poly1);
+            storage.persistPoly(connection, poly2);
 
             EmbeddedPolyQuery genericQuery = new EmbeddedPolyQuery();
-            List<BasicPoly> genericList = sqLiteStorage.listPoly(connection, genericQuery);
+            List<BasicPoly> genericList = storage.listPoly(connection, genericQuery);
             assertThat(genericList.size(), is(2));
 
             EmbeddedPolyQuery tagQuery = new EmbeddedPolyQuery();
             tagQuery.setTag("tag1");
-            List<BasicPoly> listPoly = sqLiteStorage.listPoly(connection, tagQuery);
+            List<BasicPoly> listPoly = storage.listPoly(connection, tagQuery);
             assertThat(listPoly.size(), is(1));
 
-            long count = sqLiteStorage.fetchPolyCount(connection, tagQuery);
+            long count = storage.fetchPolyCount(connection, tagQuery);
             assertThat(count, is(1L));
 
             EmbeddedPolyQuery tagQuery2 = new EmbeddedPolyQuery();
             tagQuery2.setTag("random-tag");
 
-            long count2 = sqLiteStorage.fetchPolyCount(connection, tagQuery2);
+            long count2 = storage.fetchPolyCount(connection, tagQuery2);
             assertThat(count2, is(0L));
 
             EmbeddedPolyQuery pageQuery = new EmbeddedPolyQuery();
             pageQuery.setPage(0L);
             pageQuery.setItemPerPage(1L);
 
-            listPoly = sqLiteStorage.listPoly(connection, pageQuery);
+            listPoly = storage.listPoly(connection, pageQuery);
             assertThat(listPoly.size(), is(1));
             assertThat(listPoly.get(0)._id(), is("potato2"));
 
@@ -141,7 +142,7 @@ public class H2StorageTest {
             page2Query.setPage(1L);
             page2Query.setItemPerPage(1L);
 
-            listPoly = sqLiteStorage.listPoly(connection, page2Query);
+            listPoly = storage.listPoly(connection, page2Query);
             assertThat(listPoly.size(), is(1));
             assertThat(listPoly.get(0)._id(), is("potato1"));
 
@@ -154,22 +155,22 @@ public class H2StorageTest {
 
     @Test
     public void testDBPolyRemoval() throws Exception {
-        H2Storage sqLiteStorage = new H2Storage(dbFile.getAbsolutePath());
-        sqLiteStorage.migrateStorage();
+        H2Storage storage = new H2Storage(dbFile.getAbsolutePath());
+        storage.migrateStorage();
 
         BasicPoly poly = BasicPoly.newPoly("potato");
         poly.put("tomato", "qwe");
 
-        try (Connection connection = sqLiteStorage.openDb()) {
+        try (Connection connection = storage.openDb()) {
 
-            sqLiteStorage.persistPoly(connection, poly);
+            storage.persistPoly(connection, poly);
 
-            Optional<BasicPoly> polyById = sqLiteStorage.fetchPoly(connection, "potato");
+            Optional<BasicPoly> polyById = storage.fetchPoly(connection, "potato");
             assertThat(polyById.isPresent(), is(true));
 
-            sqLiteStorage.removePoly(connection, "potato");
+            storage.removePoly(connection, "potato");
 
-            Optional<BasicPoly> polyById2 = sqLiteStorage.fetchPoly(connection, "potato");
+            Optional<BasicPoly> polyById2 = storage.fetchPoly(connection, "potato");
             assertThat(polyById2.isPresent(), is(false));
         } catch (Exception e) {
             throw e;
@@ -178,23 +179,23 @@ public class H2StorageTest {
 
     @Test
     public void testTagIndexOperations() throws Exception {
-        H2Storage sqLiteStorage = new H2Storage(dbFile.getAbsolutePath());
-        sqLiteStorage.migrateStorage();
-        sqLiteStorage.migrateTagIndexStorage("tag_index_potato");
+        H2Storage storage = new H2Storage(dbFile.getAbsolutePath());
+        storage.migrateStorage();
+        storage.migrateTagIndexStorage("tag_index_potato");
 
         BasicPoly basicPoly = BasicPoly.newPoly();
         basicPoly._id("qwe");
         basicPoly.put("x", "y");
 
-        Connection connection = sqLiteStorage.openDb();
+        Connection connection = storage.openDb();
 
-        sqLiteStorage.persistIndexTag(connection, "tag_index_potato", "document_tomato", basicPoly);
-        sqLiteStorage.persistIndexTag(connection, "tag_index_potato", "document_tomato", basicPoly);
+        storage.persistIndexTag(connection, "tag_index_potato", "document_tomato", basicPoly);
+        storage.persistIndexTag(connection, "tag_index_potato", "document_tomato", basicPoly);
 
-        long tag_index_count = sqLiteStorage.fetchTagIndexCount(connection, "tag_index_potato");
+        long tag_index_count = storage.fetchTagIndexCount(connection, "tag_index_potato");
         assertThat(tag_index_count, is(1L));
 
-        Optional<BasicPoly> dbPoly = sqLiteStorage.fetchTagIndexPoly(connection, "tag_index_potato", "document_tomato");
+        Optional<BasicPoly> dbPoly = storage.fetchTagIndexPoly(connection, "tag_index_potato", "document_tomato");
         assertThat(dbPoly.isPresent(), is(true));
         assertThat(dbPoly.get().fetch("x"), is("y"));
 
@@ -202,154 +203,70 @@ public class H2StorageTest {
 
     @Test
     public void testTagOperations() throws Exception {
-        H2Storage sqLiteStorage = new H2Storage(dbFile.getAbsolutePath());
-        sqLiteStorage.migrateStorage();
+        H2Storage storage = new H2Storage(dbFile.getAbsolutePath());
+        storage.migrateStorage();
 
-        Connection connection = sqLiteStorage.openDb();
+        Connection connection = storage.openDb();
 
-        sqLiteStorage.persistTag(connection, BasicPoly.newPoly("test_tag_1"));
-        sqLiteStorage.persistTag(connection, BasicPoly.newPoly("test_tag_1"));
+        storage.persistTag(connection, BasicPoly.newPoly("test_tag_1"));
+        storage.persistTag(connection, BasicPoly.newPoly("test_tag_1"));
 
-        sqLiteStorage.persistTag(connection, BasicPoly.newPoly("test_tag_2"));
+        storage.persistTag(connection, BasicPoly.newPoly("test_tag_2"));
 
-        long tagCount = sqLiteStorage.fetchTagCount(connection);
+        long tagCount = storage.fetchTagCount(connection);
         assertThat(tagCount, is(2L));
 
-        List<BasicPoly> tagList = sqLiteStorage.fetchTags(connection);
+        List<BasicPoly> tagList = storage.fetchTags(connection);
 
         assertThat(tagList, is(notNullValue()));
         assertThat(tagList.size(), is(2));
 
-        Optional<BasicPoly> test_tag_1 = sqLiteStorage.fetchTagPoly(connection, "test_tag_1");
+        Optional<BasicPoly> test_tag_1 = storage.fetchTagPoly(connection, "test_tag_1");
         assertThat(test_tag_1.isPresent(), is(true));
         int count = test_tag_1.get().fetch("_count");
         assertThat(count, is(2));
 
-        Optional<BasicPoly> test_tag_2 = sqLiteStorage.fetchTagPoly(connection, "test_tag_2");
+        Optional<BasicPoly> test_tag_2 = storage.fetchTagPoly(connection, "test_tag_2");
         assertThat(test_tag_2.isPresent(), is(true));
         int count2 = test_tag_2.get().fetch("_count");
         assertThat(count2, is(1));
 
-        Optional<BasicPoly> test_tag_3 = sqLiteStorage.fetchTagPoly(connection, "test_tag_3");
+        Optional<BasicPoly> test_tag_3 = storage.fetchTagPoly(connection, "test_tag_3");
         assertThat(test_tag_3.isPresent(), is(false));
 
 
 
     }
 
+    @Test
+    public void testCustomTagStorageUsage() throws SQLException {
+        String CUSTOM_TAG_STORAGE = "categories";
+        H2Storage storage = new H2Storage(dbFile.getAbsolutePath());
+        storage.migrateStorage();
+        storage.migrateTagstorage(CUSTOM_TAG_STORAGE);
 
-//    @Test
-//    public void testMetadataFetching() throws EmbeddedStorageException {
-//        H2Storage sqLiteStorage = new H2Storage("/tmp/testdb.db");
-//        sqLiteStorage.migrateStorage();
-//
-//        Optional<Poly> tomato = sqLiteStorage.fetchMetadata("tomato");
-//        assertThat(tomato.isPresent(), is(false));
-//
-//        BasicPoly basicPoly = new BasicPoly();
-//        basicPoly._id("tomato");
-//        basicPoly.put("test_key", "test_value");
-//
-//        sqLiteStorage.persistMetadata("tomato", basicPoly);
-//
-//
-//        Optional<Poly> updatedTomato = sqLiteStorage.fetchMetadata("tomato");
-//        assertThat(updatedTomato.isPresent(), is(true));
-//        Poly tomatoPoly = updatedTomato.get();
-//
-//        assertThat(tomatoPoly._id(), is("tomato"));
-//        assertThat(tomatoPoly.get("test_key"), is("test_value"));
-//
-//
-//        Poly metadataPoly = sqLiteStorage.metadata();
-//        assertThat(metadataPoly, is(nullValue()));
-//
-//        BasicPoly metadataToUpdate = new BasicPoly()._id("meta1");
-//        sqLiteStorage.metadata(metadataToUpdate);
-//
-//        Poly changedMetadata = sqLiteStorage.metadata();
-//        assertThat(changedMetadata, is(notNullValue()));
-//        assertThat(changedMetadata._id(), is("meta1"));
-//
-//    }
-//
-//
-//    @Test
-//    public void testSaveUpdate() throws EmbeddedStorageException {
-//        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
-//        sqLiteStorage.migrateStorage();
-//
-//
-//        BasicPoly basicPoly = BasicPoly.newPoly("potato");
-//        basicPoly.put("value", "tomato");
-//
-//        Poly poly = sqLiteStorage.fetchById("potato");
-//        assertThat(poly, is(nullValue()));
-//
-//        sqLiteStorage.persist(basicPoly);
-//
-//        Poly dbPoly = sqLiteStorage.fetchById("potato");
-//        assertThat(dbPoly, is(notNullValue()));
-//        assertThat(dbPoly.get("value"), is("tomato"));
-//
-//
-//        BasicPoly updatePoly = BasicPoly.newPoly("potato");
-//        updatePoly.put("value", "tomato2");
-//        sqLiteStorage.persist(updatePoly);
-//
-//        Poly updatedPoly = sqLiteStorage.fetchById("potato");
-//        assertThat(updatedPoly, is(notNullValue()));
-//        assertThat(updatedPoly.get("value"), is("tomato2"));
-//    }
-//
-//    @Test
-//    public void testPolyRemoval() throws EmbeddedStorageException {
-//
-//        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
-//        sqLiteStorage.migrateStorage();
-//
-//
-//        boolean missingRemoval = sqLiteStorage.remove("potato");
-//        assertThat(missingRemoval, is(false));
-//
-//        BasicPoly basicPoly = BasicPoly.newPoly("potato");
-//        basicPoly.put("value", "tomato");
-//
-//        sqLiteStorage.persist(basicPoly);
-//
-//        boolean removalResult = sqLiteStorage.remove("potato");
-//        assertThat(removalResult, is(true));
-//
-//        boolean missingRemoval2 = sqLiteStorage.remove("potato");
-//        assertThat(missingRemoval2, is(false));
-//    }
-//
-//    @Test
-//    public void testPolyListing() {
-//        SQLiteStorage sqLiteStorage = new SQLiteStorage("/tmp/testdb.db");
-//        sqLiteStorage.migrateStorage();
-//
-//        assertThat(sqLiteStorage.size(), is(0L));
-//
-//        Collection<? extends Poly> list = sqLiteStorage.list();
-//        assertThat(list.isEmpty(), is(true));
-//
-//        BasicPoly basicPoly = BasicPoly.newPoly("potato");
-//        basicPoly.put("value", "tomato");
-//
-//        sqLiteStorage.persist(basicPoly);
-//
-//        assertThat(sqLiteStorage.size(), is(1L));
-//        Collection<? extends Poly> records = sqLiteStorage.list();
-//        assertThat(records.isEmpty(), is(false));
-//        assertThat(records.size(), is(1));
-//
-//        Poly poly = records.iterator().next();
-//        assertThat(poly, is(not(nullValue())));
-//        assertThat(poly._id(), is("potato"));
-//        assertThat(poly.get("value"), is("tomato"));
-//
-//
-//    }
+        try (Connection connection = storage.openDb()) {
+            BasicPoly category1 = BasicPoly.newPoly("category1");
+            BasicPoly category2 = BasicPoly.newPoly("category2");
+            category2.put("x", "y");
+
+            storage.persistTag(connection, CUSTOM_TAG_STORAGE, category1);
+            storage.persistTag(connection, CUSTOM_TAG_STORAGE, category1);
+            storage.persistTag(connection, CUSTOM_TAG_STORAGE, category2);
+
+            long count = storage.fetchTagCount(connection, CUSTOM_TAG_STORAGE);
+            assertThat(count, is(2L));
+
+            List<BasicPoly> list = storage.fetchTags(connection, CUSTOM_TAG_STORAGE);
+            assertThat(list.size(), is(2));
+
+            Optional<BasicPoly> poly = storage
+                .fetchTagPoly(connection, CUSTOM_TAG_STORAGE, category1._id());
+
+            assertThat(poly.isPresent(), is(true));
+            assertThat(poly.get()._id(), is(category1._id()));
+            assertThat(poly.get().fetch(EmbeddedPolyConstants.COUNT_KEY), is(2));
+        }
+    }
 
 }
