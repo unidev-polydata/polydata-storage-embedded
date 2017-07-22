@@ -187,6 +187,11 @@ public class H2Storage extends AbstractEmbeddedStorage {
     }
 
     @Override
+    public BasicPoly persistTag(Connection connection, String tagStorage, BasicPoly tagPoly) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
     public List<BasicPoly> fetchTags(Connection connection) {
         try {
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + EmbeddedPolyConstants.TAGS_POLY + " ORDER BY count DESC");
@@ -198,13 +203,28 @@ public class H2Storage extends AbstractEmbeddedStorage {
     }
 
     @Override
+    public List<BasicPoly> fetchTags(Connection connection, String tagStorage) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
     public Optional<BasicPoly> fetchTagPoly(Connection connection, String id) {
         return fetchRawPoly(connection, EmbeddedPolyConstants.TAGS_POLY, id);
     }
 
     @Override
+    public Optional<BasicPoly> fetchTagPoly(Connection connection, String tagStorage, String id) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
     public long fetchTagCount(Connection connection) {
         return fetchPolyCount(connection, EmbeddedPolyConstants.TAGS_POLY);
+    }
+
+    @Override
+    public long fetchTagCount(Connection connection, String tagStorage) {
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override

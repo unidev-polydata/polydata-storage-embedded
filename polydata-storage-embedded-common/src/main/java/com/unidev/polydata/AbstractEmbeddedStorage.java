@@ -117,12 +117,28 @@ public abstract class AbstractEmbeddedStorage {
      */
     public abstract BasicPoly persistTag(Connection connection, BasicPoly tagPoly);
 
+
+    /**
+     * Persist tag record
+     * @param connection
+     * @param tagPoly
+     * @return
+     */
+    public abstract BasicPoly persistTag(Connection connection, String tagStorage, BasicPoly tagPoly);
+
     /**
      * Fetching tag by id
      * @param connection
      * @return
      */
     public abstract List<BasicPoly> fetchTags(Connection connection);
+
+    /**
+     * Fetching tag by id
+     * @param connection
+     * @return
+     */
+    public abstract List<BasicPoly> fetchTags(Connection connection, String tagStorage);
 
     /**
      * Fetch tag polys
@@ -132,6 +148,14 @@ public abstract class AbstractEmbeddedStorage {
      */
     public abstract Optional<BasicPoly> fetchTagPoly(Connection connection, String id);
 
+    /**
+     * Fetch tag polys
+     * @param connection
+     * @param id
+     * @return
+     */
+    public abstract Optional<BasicPoly> fetchTagPoly(Connection connection, String tagStorage, String id);
+
     // count tags
 
     /**
@@ -140,6 +164,14 @@ public abstract class AbstractEmbeddedStorage {
      * @return
      */
     public abstract long fetchTagCount(Connection connection);
+
+
+    /**
+     * Count tag records in tag poly
+     * @param connection
+     * @return
+     */
+    public abstract long fetchTagCount(Connection connection, String tagStorage);
 
     // persist tag index
 

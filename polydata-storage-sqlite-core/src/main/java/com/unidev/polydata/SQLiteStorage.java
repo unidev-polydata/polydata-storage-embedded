@@ -271,6 +271,11 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
         return fetchRawPoly(connection, TAGS_POLY, tagPoly._id()).orElseThrow(EmbeddedStorageException::new);
     }
 
+    @Override
+    public BasicPoly persistTag(Connection connection, String tagStorage, BasicPoly tagPoly) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
     /**
      * Fetching tag by id
      * @param connection
@@ -286,6 +291,11 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
         }
     }
 
+    @Override
+    public List<BasicPoly> fetchTags(Connection connection, String tagStorage) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
 
     /**
      * Fetch tag polys
@@ -297,6 +307,11 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
         return fetchRawPoly(connection, EmbeddedPolyConstants.TAGS_POLY, id);
     }
 
+    @Override
+    public Optional<BasicPoly> fetchTagPoly(Connection connection, String tagStorage, String id) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
     // count tags
 
     /**
@@ -306,6 +321,11 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
      */
     public long fetchTagCount(Connection connection) {
         return fetchPolyCount(connection, EmbeddedPolyConstants.TAGS_POLY);
+    }
+
+    @Override
+    public long fetchTagCount(Connection connection, String tagStorage) {
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     // fetch tag index list
