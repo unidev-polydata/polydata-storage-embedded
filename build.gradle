@@ -1,4 +1,4 @@
-project.ext.unidevPlatformVersion = "2.0.0"
+project.ext.unidevPlatformVersion = "3.2.8"
 project.ext.polydataDomainVersion = "2.1.1"
 project.ext.polydataStorageVersion = "2.1.1"
 
