@@ -1,13 +1,12 @@
 package com.unidev.polydata;
 
 import com.unidev.polydata.domain.BasicPoly;
+import com.unidev.polydata.domain.Poly;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
@@ -26,11 +25,31 @@ public class SQLiteStorageTest {
         dbFile.delete();
     }
 
-    @Test
-    public void testStorageMigration() throws EmbeddedStorageException {
+    private SQLiteStorage fetchStorage() {
         SQLiteStorage sqLiteStorage = new SQLiteStorage(dbFile.getAbsolutePath());
         sqLiteStorage.migrateStorage();
+        return sqLiteStorage;
     }
+
+    @Test
+    public void testStorageMigration() throws EmbeddedStorageException {
+        fetchStorage();
+    }
+
+    @Test
+    public void testMetadataOperations() {
+        SQLiteStorage sqLiteStorage = fetchStorage();
+
+        Optional<Poly> metadata = sqLiteStorage.metadata("main");
+        assertThat(metadata.isPresent(), is(false));
+
+        sqLiteStorage.persistMetadata("main", BasicPoly.newPoly("main").with("value", "tomato"));
+
+        Optional<Poly> metadata2 = sqLiteStorage.metadata("main");
+        assertThat(metadata2.isPresent(), is(true));
+        assertThat(metadata2.get()._id(), is("main"));
+    }
+
 //
 //    @Test
 //    public void testPersistingPoly() throws SQLException {

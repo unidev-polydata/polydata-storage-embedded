@@ -22,8 +22,7 @@ import org.flywaydb.core.Flyway;
 import java.sql.*;
 import java.util.Optional;
 
-import static com.unidev.polydata.EmbeddedPolyConstants.METADATA_POLY;
-import static com.unidev.polydata.EmbeddedPolyConstants.POLY_OBJECT_MAPPER;
+import static com.unidev.polydata.EmbeddedPolyConstants.*;
 
 /**
  * Named polydata storage,
@@ -46,6 +45,7 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
 
     /**
      * Open poly storage connection
+     *
      * @return
      * @throws SQLException
      */
@@ -69,15 +69,19 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
         flyway.migrate();
     }
 
-
     @Override
     public <P extends Poly> Optional<P> metadata(String container) {
+        return (Optional<P>) fetchRawPoly(fetchConnection(), METADATA_POLY, container, container);
+    }
 
-        return Optional.empty();
+    @Override
+    public <P extends Poly> P persistMetadata(String container, P metadata) {
+        return persistRawPoly(fetchConnection(), METADATA_POLY, container, metadata);
     }
 
     @Override
     public <P extends Poly> Optional<P> fetchById(String container, String id) {
+        return fetchRawPoly(fetchConnection(), DATA_POLY, container, id);
         return Optional.empty();
     }
 
@@ -93,11 +97,6 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
 
     @Override
     public <P extends Poly> P persist(String container, P poly) {
-        return null;
-    }
-
-    @Override
-    public <P extends Poly> P persistMetadata(String container, P metadata) {
         return null;
     }
 
@@ -132,16 +131,17 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
     }
 
 
-
     /**
      * Fetch support poly by id
+     *
      * @return
      */
-    public Optional<BasicPoly> fetchRawPoly(Connection connection, String table, String id) {
+    public <P extends Poly> Optional<P> fetchRawPoly(Connection connection, String table, String container, String id) {
         PreparedStatement preparedStatement;
         try {
-            preparedStatement = connection.prepareStatement("SELECT * FROM " + table + " WHERE _id = ?");
-            preparedStatement.setString(1, id);
+            preparedStatement = connection.prepareStatement("SELECT * FROM " + table + " WHERE container=? AND _id = ?");
+            preparedStatement.setString(1, container);
+            preparedStatement.setString(2, id);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
                 String rawJSON = resultSet.getString(EmbeddedPolyConstants.DATA_KEY);
@@ -157,15 +157,46 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
     /**
      * Remove raw poly from db
      */
-    public boolean removeRawPoly(Connection connection, String table, String id) {
+    public boolean removeRawPoly(Connection connection, String table, String container, String id) {
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + table + " WHERE _id = ?");
-            preparedStatement.setString(1, id);
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + table + " WHERE container=? AND _id = ? ");
+            preparedStatement.setString(1, container);
+            preparedStatement.setString(2, id);
             return preparedStatement.executeUpdate() != 0;
         } catch (Exception e) {
             log.error("Failed to remove poly {} {} {}", table, id, dbFile, e);
             return false;
         }
+    }
+
+    public <P extends Poly> P persistRawPoly(Connection connection, String table, String container, P poly) {
+        try {
+            String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(poly);
+
+            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + table + " WHERE container=? AND _id = ?;");
+            dataStatement.setString(1, container);
+            dataStatement.setString(2, poly._id());
+            ResultSet dataResultSet = dataStatement.executeQuery();
+            java.util.Date date = new java.util.Date();
+            if (!dataResultSet.next()) { // insert
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + table + " (container, _id, data) VALUES(?, ?, ?);");
+                preparedStatement.setString(1, container);
+                preparedStatement.setString(2, poly._id());
+                preparedStatement.setObject(3, rawJSON);
+                preparedStatement.executeUpdate();
+            } else { // update
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + table + "(id, container, _id, tags, data) VALUES(?, ?, ?, ?);");
+                preparedStatement.setObject(1, dataResultSet.getObject("id"));
+                preparedStatement.setString(3, container);
+                preparedStatement.setString(3, poly._id());
+                preparedStatement.setObject(4, rawJSON);
+                preparedStatement.executeUpdate();
+            }
+        } catch (Exception e) {
+            log.error("Failed to persist poly {}", poly, e);
+            throw new EmbeddedStorageException(e);
+        }
+        return poly;
     }
 
 //
