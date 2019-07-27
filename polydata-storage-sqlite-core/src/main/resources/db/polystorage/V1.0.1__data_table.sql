@@ -2,7 +2,6 @@ CREATE TABLE data (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   container TEXT,
   _id TEXT,
-  tags TEXT,
   data JSON
 );
 

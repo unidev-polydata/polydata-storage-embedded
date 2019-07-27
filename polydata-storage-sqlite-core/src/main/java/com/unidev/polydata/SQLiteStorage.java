@@ -71,18 +71,17 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
 
     @Override
     public <P extends Poly> Optional<P> metadata(String container) {
-        return (Optional<P>) fetchRawPoly(fetchConnection(), METADATA_POLY, container, container);
+        return (Optional<P>) fetchRawPoly(fetchConnection(), METADATA, container, container);
     }
 
     @Override
     public <P extends Poly> P persistMetadata(String container, P metadata) {
-        return persistRawPoly(fetchConnection(), METADATA_POLY, container, metadata);
+        return persistRawPoly(fetchConnection(), METADATA, container, metadata);
     }
 
     @Override
     public <P extends Poly> Optional<P> fetchById(String container, String id) {
-        return fetchRawPoly(fetchConnection(), DATA_POLY, container, id);
-        return Optional.empty();
+        return (Optional<P>) fetchRawPoly(fetchConnection(), DATA, container, id);
     }
 
     @Override
@@ -136,7 +135,7 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
      *
      * @return
      */
-    public <P extends Poly> Optional<P> fetchRawPoly(Connection connection, String table, String container, String id) {
+    public <P extends Poly> Optional<BasicPoly> fetchRawPoly(Connection connection, String table, String container, String id) {
         PreparedStatement preparedStatement;
         try {
             preparedStatement = connection.prepareStatement("SELECT * FROM " + table + " WHERE container=? AND _id = ?");

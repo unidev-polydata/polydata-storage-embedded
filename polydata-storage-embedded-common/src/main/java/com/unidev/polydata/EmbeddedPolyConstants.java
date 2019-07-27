@@ -24,9 +24,11 @@ import com.fasterxml.jackson.databind.SerializationFeature;
  */
 public class EmbeddedPolyConstants {
 
+    public static final String METADATA = "metadata";
+    public static final String DATA = "data";
+    public static final String POLY_LIST = "poly_list";
+    public static final String POLY_MAP = "poly_map";
     public static final String TAGS_POLY = "tags";
-    public static final String DATA_POLY = "data";
-    public static final String METADATA_POLY = "metadata";
 
     public static final String ID_KEY = "_id";
     public static final String DATA_KEY = "data";
