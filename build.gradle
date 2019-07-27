@@ -1,6 +1,7 @@
 project.ext.unidevPlatformVersion = "3.2.8"
-project.ext.polydataDomainVersion = "2.1.1"
-project.ext.polydataStorageVersion = "2.1.1"
+project.ext.polydataDomainVersion = "2.2.1-SNAPSHOT"
+project.ext.polydataStorageVersion = "2.2.1-SNAPSHOT"
+project.ext.lombokVersion = "1.18.4"
 
 
 subprojects {
@@ -19,6 +20,11 @@ subprojects {
     
 
     dependencies {
+        compileOnly("org.projectlombok:lombok:${project.lombokVersion}")
+        testCompileOnly("org.projectlombok:lombok:${project.lombokVersion}")
+        annotationProcessor("org.projectlombok:lombok:${project.lombokVersion}")
+        testAnnotationProcessor("org.projectlombok:lombok:${project.lombokVersion}")
+
         // test dependencies
         testCompile 'junit:junit:4.12'
         testCompile 'org.hamcrest:hamcrest-all:1.3'

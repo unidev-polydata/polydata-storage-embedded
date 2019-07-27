@@ -26,6 +26,7 @@ public class EmbeddedPolyConstants {
 
     public static final String TAGS_POLY = "tags";
     public static final String DATA_POLY = "data";
+    public static final String METADATA_POLY = "metadata";
 
     public static final String ID_KEY = "_id";
     public static final String DATA_KEY = "data";
