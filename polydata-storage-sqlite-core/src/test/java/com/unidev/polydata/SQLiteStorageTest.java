@@ -2,6 +2,7 @@ package com.unidev.polydata;
 
 import com.unidev.polydata.domain.BasicPoly;
 import com.unidev.polydata.domain.Poly;
+import com.unidev.polydata.domain.PolyList;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -132,6 +133,33 @@ public class SQLiteStorageTest {
         assertThat(tags.fetch("tag3"), is(1));
         assertThat(tags.fetch("tag2"), is(2));
         assertThat(tags.fetch("tag1"), is(2));
+
+    }
+
+    @Test
+    public void testQuery() {
+        SQLiteStorage sqLiteStorage = fetchStorage();
+
+        for(int i = 0;i<10;i++) {
+            BasicPoly poly = BasicPoly.newPoly("id_" + i);
+            poly.put("1", "2");
+            poly.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("tag" + i, "tag" + i + 1));
+            sqLiteStorage.persist("main", poly);
+        }
+
+        assertThat(sqLiteStorage.fetchPolyCount("main"), is(10L));
+
+        EmbeddedPolyQuery embeddedPolyQuery = EmbeddedPolyQuery.builder()
+                .page(0L)
+                .itemPerPage(2L)
+                .build();
+
+        PolyList list = sqLiteStorage.query("main", embeddedPolyQuery);
+
+        assertThat(list, is(notNullValue()));
+        assertThat(list.list(), is(notNullValue()));
+        assertThat(list.list().size(), is(2));
+
 
     }
 

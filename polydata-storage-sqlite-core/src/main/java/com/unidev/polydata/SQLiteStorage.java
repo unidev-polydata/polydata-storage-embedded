@@ -15,10 +15,7 @@
  */
 package com.unidev.polydata;
 
-import com.unidev.polydata.domain.BasicPoly;
-import com.unidev.polydata.domain.Poly;
-import com.unidev.polydata.domain.PolyList;
-import com.unidev.polydata.domain.PolyQuery;
+import com.unidev.polydata.domain.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.flywaydb.core.Flyway;
@@ -126,24 +123,61 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
         for (String key : list) {
             indexId.append(key).append(":").append(keys.get(key));
         }
-        persistRawPoly(fetchConnection(), TYPE_POLY_INDEX, container, indexId.toString(), poly);
-        return null;
+        return persistRawPoly(fetchConnection(), TYPE_POLY_INDEX, container, indexId.toString(), poly);
     }
 
     @Override
     public <P extends PolyList> P query(String container, PolyQuery polyQuery) {
-        SQLitePolyQuery query = (SQLitePolyQuery) polyQuery;
-
-        return null;
+        EmbeddedPolyQuery query = (EmbeddedPolyQuery) polyQuery;
+        return (P) queryPoly(container, query);
     }
 
     @Override
     public <P extends PolyList> P queryIndex(String container, PolyQuery polyQuery) {
-        SQLitePolyQuery query = (SQLitePolyQuery) polyQuery;
-
-
-        return null;
+        EmbeddedPolyQuery query = (EmbeddedPolyQuery) polyQuery;
+        return (P) queryPoly(container, query);
     }
+
+    public long fetchPolyCount(String container) {
+        return fetchRawPolyCount(fetchConnection(), TYPE_DATA, container);
+
+    }
+
+    private BasicPolyList queryPoly(String container, EmbeddedPolyQuery query) {
+        try {
+            if (query.getTag() != null) {
+
+            }
+
+
+            StringBuilder sqlQuery = new StringBuilder("SELECT * FROM " + DATA + " WHERE container=? AND _type=? ");
+            Integer id = 1;
+            Map<Integer, Object> params = new HashMap<>();
+            params.put(id++, container);
+            params.put(id++, TYPE_DATA);
+            if (query.getItemPerPage() != null) {
+
+                if (Boolean.TRUE.equals(query.getRandomOrder())) {
+                    sqlQuery.append(" ORDER BY RANDOM() ");
+                } else {
+                    sqlQuery.append(" ORDER BY update_date DESC ");
+                }
+
+                sqlQuery.append("  LIMIT ? OFFSET ?");
+                params.put(id++, query.getItemPerPage());
+                params.put(id++, query.getItemPerPage() * (query.getPage()));
+            }
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery.toString());
+            for (Map.Entry<Integer, Object> entry : params.entrySet()) {
+                preparedStatement.setObject(entry.getKey(), entry.getValue());
+            }
+            return evaluateStatementToPolyList(preparedStatement);
+        }catch (Exception e) {
+            log.warn("Failed to fetch polys {}", dbFile, e);
+            throw new EmbeddedStorageException(e);
+        }
+    }
+
 
     @Override
     public boolean removePoly(String container, String id) {
@@ -233,6 +267,35 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
             return dataResultSet.next();
         } catch (Exception e) {
             log.error("Failed to query poly {}", id, e);
+            throw new EmbeddedStorageException(e);
+        }
+    }
+
+    public long fetchRawPolyCount(Connection connection, String type, String container) {
+        PreparedStatement preparedStatement;
+        try {
+            preparedStatement = connection.prepareStatement("SELECT COUNT(*) AS count FROM " + DATA + " WHERE container = ? AND _type = ?");
+            preparedStatement.setString(1, container);
+            preparedStatement.setString(2, type);
+            return preparedStatement.executeQuery().getLong("count");
+        } catch (SQLException e) {
+            log.warn("Failed to fetch poly count from {}", type, e);
+            throw new EmbeddedStorageException(e);
+        }
+    }
+
+    private BasicPolyList evaluateStatementToPolyList(PreparedStatement preparedStatement) {
+        BasicPolyList polyList = BasicPolyList.newList();
+        try {
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String rawJSON = resultSet.getString(EmbeddedPolyConstants.DATA_KEY);
+                BasicPoly polyRecord = POLY_OBJECT_MAPPER.readValue(rawJSON, BasicPoly.class);
+                polyList.add(polyRecord);
+            }
+            return polyList;
+        } catch (Exception e) {
+            log.warn("Failed to evaluate statement {}", dbFile, e);
             throw new EmbeddedStorageException(e);
         }
     }
@@ -367,8 +430,6 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
 //            query.append(" AND " + EmbeddedPolyConstants.TAGS_KEY + " LIKE ?");
 //            params.put(id++, "%" + sqlitePolyQuery.getTag() + "%");
 //        }
-//
-//
 //
 //        if (includePagination) {
 //            if (sqlitePolyQuery.getItemPerPage() != null) {

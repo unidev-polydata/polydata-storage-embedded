@@ -32,10 +32,6 @@ public class EmbeddedPolyQuery implements PolyQuery {
 
     @Getter
     @Setter
-    private String partition;
-
-    @Getter
-    @Setter
     private String tag;
 
     @Getter
@@ -52,5 +48,8 @@ public class EmbeddedPolyQuery implements PolyQuery {
     @Setter
     private Boolean randomOrder;
 
+    @Getter
+    @Setter
+    private String type;
 
 }
