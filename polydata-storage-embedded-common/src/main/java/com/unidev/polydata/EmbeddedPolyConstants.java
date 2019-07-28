@@ -29,9 +29,14 @@ import com.unidev.polydata.domain.Poly;
  */
 public class EmbeddedPolyConstants {
 
-    public static final String METADATA = "metadata";
+    public static final String TYPE_METADATA = "metadata";
+
+    public static final String TYPE_POLYMAP = "polymap";
+
+    public static final String TYPE_DATA = "poly";
+    public static final String TYPE_POLY_INDEX = "poly_index";
+
     public static final String DATA = "data";
-    public static final String POLY_INDEX = "poly_index";
 
     public static final String ID_KEY = "_id";
     public static final String DATA_KEY = "data";

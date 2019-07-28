@@ -6,4 +6,6 @@ package com.unidev.polydata;
  */
 public class SQLitePolyQuery extends EmbeddedPolyQuery {
 
+
+
 }

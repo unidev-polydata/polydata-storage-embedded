@@ -17,48 +17,40 @@ package com.unidev.polydata;
 
 
 import com.unidev.polydata.domain.PolyQuery;
+import lombok.*;
 
 /**
  * Object for holding poly query object
  */
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class EmbeddedPolyQuery implements PolyQuery {
 
     public static final Long DEFAULT_ITEM_PER_PAGE = 30L;
 
+    @Getter
+    @Setter
+    private String partition;
+
+    @Getter
+    @Setter
     private String tag;
+
+    @Getter
+    @Setter
+    @Builder.Default
     private Long page = 0L;
+
+    @Getter
+    @Setter
+    @Builder.Default
     private Long itemPerPage = DEFAULT_ITEM_PER_PAGE;
+
+    @Getter
+    @Setter
     private Boolean randomOrder;
 
-    public Boolean getRandomOrder() {
-        return randomOrder;
-    }
 
-    public void setRandomOrder(Boolean randomOrder) {
-        this.randomOrder = randomOrder;
-    }
-
-    public String getTag() {
-        return tag;
-    }
-
-    public void setTag(String tag) {
-        this.tag = tag;
-    }
-
-    public Long getPage() {
-        return page;
-    }
-
-    public void setPage(Long page) {
-        this.page = page;
-    }
-
-    public Long getItemPerPage() {
-        return itemPerPage;
-    }
-
-    public void setItemPerPage(Long itemPerPage) {
-        this.itemPerPage = itemPerPage;
-    }
 }

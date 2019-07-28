@@ -97,6 +97,8 @@ public class SQLiteStorageTest {
 
         BasicPoly poly = BasicPoly.newPoly("test");
         poly.put("1", "2");
+        poly.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("tag1", "tag2"));
+
         sqLiteStorage.persist("main", poly);
 
         Optional<Poly> fetchById = sqLiteStorage.fetchById("main", "test");
@@ -107,6 +109,29 @@ public class SQLiteStorageTest {
 
         Optional<Poly> fetchById2 = sqLiteStorage.fetchById("main", "test");
         assertThat(fetchById2.get().fetch("1"), is("3"));
+
+    }
+
+    @Test
+    public void testTagPersisting() {
+        SQLiteStorage sqLiteStorage = fetchStorage();
+
+        BasicPoly poly = BasicPoly.newPoly("id1");
+        poly.put("1", "2");
+        poly.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("tag1", "tag2"));
+        sqLiteStorage.persist("main", poly);
+
+
+        BasicPoly poly2 = BasicPoly.newPoly("id2");
+        poly2.put("1", "2");
+        poly2.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("tag1", "tag2", "tag3"));
+        sqLiteStorage.persist("main", poly2);
+
+        BasicPoly tags = sqLiteStorage.fetchTags("main");
+
+        assertThat(tags.fetch("tag3"), is(1));
+        assertThat(tags.fetch("tag2"), is(2));
+        assertThat(tags.fetch("tag1"), is(2));
 
     }
 

@@ -15,7 +15,10 @@
  */
 package com.unidev.polydata;
 
-import com.unidev.polydata.domain.*;
+import com.unidev.polydata.domain.BasicPoly;
+import com.unidev.polydata.domain.Poly;
+import com.unidev.polydata.domain.PolyList;
+import com.unidev.polydata.domain.PolyQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.flywaydb.core.Flyway;
@@ -46,7 +49,6 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
 
     /**
      * Open poly storage connection
-     *
      */
     public Connection openDb() {
         try {
@@ -70,56 +72,82 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
 
     @Override
     public <P extends Poly> Optional<P> metadata(String container) {
-        return (Optional<P>) fetchRawPoly(fetchConnection(), METADATA, container, container);
+        return (Optional<P>) fetchRawPoly(fetchConnection(), TYPE_METADATA, container, container);
     }
 
     @Override
     public <P extends Poly> P persistMetadata(String container, P metadata) {
-        return persistRawPoly(fetchConnection(), METADATA, container, metadata._id(), metadata);
+        return persistRawPoly(fetchConnection(), TYPE_METADATA, container, metadata._id(), metadata);
     }
 
     @Override
     public <P extends Poly> Optional<P> fetchById(String container, String id) {
-        return (Optional<P>) fetchRawPoly(fetchConnection(), DATA, container, id);
+        return (Optional<P>) fetchRawPoly(fetchConnection(), TYPE_DATA, container, id);
     }
 
     @Override
     public <P extends Poly> P persist(String container, P poly) {
-        P persistedPoly = persistRawPoly(fetchConnection(), DATA, container, poly._id(), poly);
+        boolean newPoly = !existRawPoly(fetchConnection(), TYPE_DATA, container, poly._id());
+        P persistedPoly = persistRawPoly(fetchConnection(), TYPE_DATA, container, poly._id(), poly);
         List<String> tags = poly.fetch(TAGS_KEY);
         if (!CollectionUtils.isEmpty(tags)) {
             for (String tag : tags) {
                 persistIndex(container, Collections.singletonMap(TAGS_KEY, tag), BasicPoly.newPoly(poly._id()));
             }
+            if (newPoly) {
+                Optional<BasicPoly> tagsMapOptional = fetchRawPoly(fetchConnection(), TYPE_POLYMAP, container, TAGS_KEY);
+                BasicPoly tagsMap = tagsMapOptional.orElseGet(() -> BasicPoly.newPoly(TAGS_KEY));
+                for (String tag : tags) {
+                    int count = tagsMap.fetch(tag, 0);
+                    count++;
+                    tagsMap.put(tag, count);
+                }
+                persistRawPoly(fetchConnection(), TYPE_POLYMAP, container, TAGS_KEY, tagsMap);
+
+            }
         }
         return persistedPoly;
+    }
+
+    /**
+     * Fetch tag map
+     * @param container
+     * @return
+     */
+    public BasicPoly fetchTags(String container) {
+        return fetchRawPoly(fetchConnection(), TYPE_POLYMAP, container, TAGS_KEY).orElseGet(BasicPoly::new);
     }
 
     @Override
     public <P extends Poly> P persistIndex(String container, Map<String, Object> keys, P poly) {
         List<String> list = new ArrayList<>(keys.keySet());
         Collections.sort(list);
-        String indexId = "";
-        for(String key : list) {
-            indexId += key + ":" + keys.get(key);
+        StringBuilder indexId = new StringBuilder();
+        for (String key : list) {
+            indexId.append(key).append(":").append(keys.get(key));
         }
-        persistRawPoly(fetchConnection(), POLY_INDEX, container, indexId, poly);
+        persistRawPoly(fetchConnection(), TYPE_POLY_INDEX, container, indexId.toString(), poly);
         return null;
     }
 
     @Override
     public <P extends PolyList> P query(String container, PolyQuery polyQuery) {
+        SQLitePolyQuery query = (SQLitePolyQuery) polyQuery;
+
         return null;
     }
 
     @Override
     public <P extends PolyList> P queryIndex(String container, PolyQuery polyQuery) {
+        SQLitePolyQuery query = (SQLitePolyQuery) polyQuery;
+
+
         return null;
     }
 
     @Override
     public boolean removePoly(String container, String id) {
-        return removeRawPoly(fetchConnection(), DATA, container, id);
+        return removeRawPoly(fetchConnection(), TYPE_DATA, container, id);
     }
 
     /**
@@ -127,12 +155,13 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
      *
      * @return
      */
-    public <P extends Poly> Optional<BasicPoly> fetchRawPoly(Connection connection, String table, String container, String id) {
+    public <P extends Poly> Optional<BasicPoly> fetchRawPoly(Connection connection, String type, String container, String id) {
         PreparedStatement preparedStatement;
         try {
-            preparedStatement = connection.prepareStatement("SELECT * FROM " + table + " WHERE container=? AND _id = ?");
+            preparedStatement = connection.prepareStatement("SELECT * FROM " + DATA + " WHERE container=? AND _type = ? AND  _id = ?");
             preparedStatement.setString(1, container);
-            preparedStatement.setString(2, id);
+            preparedStatement.setString(2, type);
+            preparedStatement.setString(3, id);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
                 String rawJSON = resultSet.getString(EmbeddedPolyConstants.DATA_KEY);
@@ -140,7 +169,7 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
             }
             return Optional.empty();
         } catch (Exception e) {
-            log.warn("Failed to fetch support poly {} {} {}", table, id, dbFile, e);
+            log.warn("Failed to fetch support poly {} {} {}", type, id, dbFile, e);
             return Optional.empty();
         }
     }
@@ -148,39 +177,43 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
     /**
      * Remove raw poly from db
      */
-    public boolean removeRawPoly(Connection connection, String table, String container, String id) {
+    public boolean removeRawPoly(Connection connection, String type, String container, String id) {
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + table + " WHERE container=? AND _id = ? ");
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + DATA + " WHERE container=? AND _type = ? AND _id = ? ");
             preparedStatement.setString(1, container);
-            preparedStatement.setString(2, id);
+            preparedStatement.setString(2, type);
+            preparedStatement.setString(3, id);
             return preparedStatement.executeUpdate() != 0;
         } catch (Exception e) {
-            log.error("Failed to remove poly {} {} {}", table, id, dbFile, e);
+            log.error("Failed to remove poly {} {} {}", type, id, dbFile, e);
             return false;
         }
     }
 
-    public <P extends Poly> P persistRawPoly(Connection connection, String table, String container, String id, P poly) {
+    public <P extends Poly> P persistRawPoly(Connection connection, String type, String container, String id, P poly) {
         try {
             String rawJSON = POLY_OBJECT_MAPPER.writeValueAsString(poly);
 
-            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + table + " WHERE container=? AND _id = ?;");
+            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + DATA + " WHERE container=? AND _type = ? AND _id = ?;");
             dataStatement.setString(1, container);
-            dataStatement.setString(2, id);
+            dataStatement.setString(2, type);
+            dataStatement.setString(3, id);
             ResultSet dataResultSet = dataStatement.executeQuery();
-            java.util.Date date = new java.util.Date();
             if (!dataResultSet.next()) { // insert
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + table + " (container, _id, data) VALUES(?, ?, ?);");
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + DATA + " (container, _type, _id, data) VALUES(?, ?, ?, ?);");
                 preparedStatement.setString(1, container);
-                preparedStatement.setString(2, id);
-                preparedStatement.setObject(3, rawJSON);
-                preparedStatement.executeUpdate();
-            } else { // update
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + table + "(id, container, _id, data) VALUES(?, ?, ?, ?);");
-                preparedStatement.setObject(1, dataResultSet.getObject("id"));
-                preparedStatement.setString(2, container);
+                preparedStatement.setString(2, type);
                 preparedStatement.setString(3, id);
                 preparedStatement.setObject(4, rawJSON);
+                preparedStatement.executeUpdate();
+            } else { // update
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + DATA + "(id, container, _type, _id, data, update_date) VALUES(?, ?, ?, ?, ?, ?);");
+                preparedStatement.setObject(1, dataResultSet.getObject("id"));
+                preparedStatement.setString(2, container);
+                preparedStatement.setString(3, type);
+                preparedStatement.setString(4, id);
+                preparedStatement.setObject(5, rawJSON);
+                preparedStatement.setObject(6, new java.util.Date());
                 preparedStatement.executeUpdate();
             }
         } catch (Exception e) {
@@ -189,6 +222,21 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
         }
         return poly;
     }
+
+    public boolean existRawPoly(Connection connection, String type, String container, String id) {
+        try {
+            PreparedStatement dataStatement = connection.prepareStatement("SELECT * FROM " + DATA + " WHERE container=? AND _type = ? AND _id = ?;");
+            dataStatement.setString(1, container);
+            dataStatement.setString(2, type);
+            dataStatement.setString(3, id);
+            ResultSet dataResultSet = dataStatement.executeQuery();
+            return dataResultSet.next();
+        } catch (Exception e) {
+            log.error("Failed to query poly {}", id, e);
+            throw new EmbeddedStorageException(e);
+        }
+    }
+
 
 //
 //    /**
