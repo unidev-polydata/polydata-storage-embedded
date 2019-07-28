@@ -62,7 +62,6 @@ public class SQLiteStorageTest {
         poly.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("tag1", "tag2"));
         poly.put("tomato", "potato");
 
-
         sqLiteStorage.persist("main", poly);
 
         Optional<Poly> fetchById = sqLiteStorage.fetchById("main", "test");
@@ -77,6 +76,38 @@ public class SQLiteStorageTest {
         List<String> tags = polyById.fetch(EmbeddedPolyConstants.TAGS_KEY);
         assertThat(tags, is(notNullValue()));
         assertThat(tags.contains("tag1"), is(true));
+    }
+
+    @Test
+    public void testPolyRemoval() {
+        SQLiteStorage sqLiteStorage = fetchStorage();
+        BasicPoly poly = BasicPoly.newPoly("test");
+        sqLiteStorage.persist("main", poly);
+
+        boolean removePoly = sqLiteStorage.removePoly("main", "test");
+        assertThat(removePoly, is(true));
+
+        Optional<Poly> fetchById2 = sqLiteStorage.fetchById("main", "test");
+        assertThat(fetchById2.isPresent(), is(false));
+    }
+
+    @Test
+    public void testPolyUpdate() {
+        SQLiteStorage sqLiteStorage = fetchStorage();
+
+        BasicPoly poly = BasicPoly.newPoly("test");
+        poly.put("1", "2");
+        sqLiteStorage.persist("main", poly);
+
+        Optional<Poly> fetchById = sqLiteStorage.fetchById("main", "test");
+        assertThat(fetchById.get().fetch("1"), is("2"));
+
+        poly.put("1", "3");
+        sqLiteStorage.persist("main", poly);
+
+        Optional<Poly> fetchById2 = sqLiteStorage.fetchById("main", "test");
+        assertThat(fetchById2.get().fetch("1"), is("3"));
+
     }
 
 //

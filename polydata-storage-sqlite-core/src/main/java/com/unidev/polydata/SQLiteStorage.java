@@ -176,9 +176,9 @@ public class SQLiteStorage extends AbstractEmbeddedStorage {
                 preparedStatement.setObject(3, rawJSON);
                 preparedStatement.executeUpdate();
             } else { // update
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + table + "(id, container, _id, data) VALUES(?, ?, ?);");
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT OR REPLACE INTO " + table + "(id, container, _id, data) VALUES(?, ?, ?, ?);");
                 preparedStatement.setObject(1, dataResultSet.getObject("id"));
-                preparedStatement.setString(3, container);
+                preparedStatement.setString(2, container);
                 preparedStatement.setString(3, id);
                 preparedStatement.setObject(4, rawJSON);
                 preparedStatement.executeUpdate();
