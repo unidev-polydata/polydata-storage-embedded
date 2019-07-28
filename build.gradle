@@ -1,6 +1,6 @@
 project.ext.unidevPlatformVersion = "3.2.8"
-project.ext.polydataDomainVersion = "2.2.1-SNAPSHOT"
-project.ext.polydataStorageVersion = "2.2.1-SNAPSHOT"
+project.ext.polydataDomainVersion = "2.2.2-SNAPSHOT"
+project.ext.polydataStorageVersion = "2.2.2-SNAPSHOT"
 project.ext.lombokVersion = "1.18.4"
 
 

@@ -16,10 +16,12 @@
 package com.unidev.polydata;
 
 
+import com.unidev.polydata.domain.PolyQuery;
+
 /**
  * Object for holding poly query object
  */
-public class EmbeddedPolyQuery {
+public class EmbeddedPolyQuery implements PolyQuery {
 
     public static final Long DEFAULT_ITEM_PER_PAGE = 30L;
 

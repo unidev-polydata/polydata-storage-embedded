@@ -26,14 +26,11 @@ public class EmbeddedPolyConstants {
 
     public static final String METADATA = "metadata";
     public static final String DATA = "data";
-    public static final String POLY_LIST = "poly_list";
-    public static final String POLY_MAP = "poly_map";
-    public static final String TAGS_POLY = "tags";
+    public static final String POLY_INDEX = "poly_index";
 
     public static final String ID_KEY = "_id";
     public static final String DATA_KEY = "data";
     public static final String TAGS_KEY = "tags";
-    public static final String COUNT_KEY = "_count";
 
     public static ObjectMapper POLY_OBJECT_MAPPER = new ObjectMapper() {{
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

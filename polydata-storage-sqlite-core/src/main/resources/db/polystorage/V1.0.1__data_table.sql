@@ -6,4 +6,3 @@ CREATE TABLE data (
 );
 
 CREATE INDEX _id_idx ON data (container, _id);
-CREATE INDEX _tag_idx ON data (container, tags);

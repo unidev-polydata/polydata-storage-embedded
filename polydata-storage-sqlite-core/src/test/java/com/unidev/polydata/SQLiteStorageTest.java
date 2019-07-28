@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -48,6 +49,17 @@ public class SQLiteStorageTest {
         Optional<Poly> metadata2 = sqLiteStorage.metadata("main");
         assertThat(metadata2.isPresent(), is(true));
         assertThat(metadata2.get()._id(), is("main"));
+    }
+
+    @Test
+    public void testPolyPersisting() {
+        SQLiteStorage sqLiteStorage = fetchStorage();
+
+        BasicPoly poly = BasicPoly.newPoly("test");
+
+        poly.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("tag1", "tag2"));
+
+        sqLiteStorage.persist("main", poly);
     }
 
 //
