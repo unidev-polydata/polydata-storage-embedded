@@ -15,9 +15,14 @@
  */
 package com.unidev.polydata;
 
+import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleAbstractTypeResolver;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.unidev.polydata.domain.BasicPoly;
+import com.unidev.polydata.domain.Poly;
 
 /**
  * Constant keys used in poly records
@@ -35,6 +40,13 @@ public class EmbeddedPolyConstants {
     public static ObjectMapper POLY_OBJECT_MAPPER = new ObjectMapper() {{
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+
+        SimpleModule module = new SimpleModule("PolyModel", Version.unknownVersion());
+
+        SimpleAbstractTypeResolver resolver = new SimpleAbstractTypeResolver();
+        resolver.addMapping(Poly.class, BasicPoly.class);
+        module.setAbstractTypes(resolver);
+        registerModule(module);
     }};
 
 }

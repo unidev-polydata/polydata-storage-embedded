@@ -1,5 +1,5 @@
 dependencies {
-    compile "com.fasterxml.jackson.core:jackson-databind:2.8.1"
+    compile "com.fasterxml.jackson.core:jackson-databind:2.9.8"
 
     compile "com.unidev.platform:unidev-common:$project.unidevPlatformVersion"
     compile "com.unidev.polydata:polydata-domain:$project.polydataDomainVersion"

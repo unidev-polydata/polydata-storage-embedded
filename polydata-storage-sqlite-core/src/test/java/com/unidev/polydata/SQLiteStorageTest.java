@@ -7,10 +7,12 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 /**
@@ -58,8 +60,23 @@ public class SQLiteStorageTest {
         BasicPoly poly = BasicPoly.newPoly("test");
 
         poly.put(EmbeddedPolyConstants.TAGS_KEY, Arrays.asList("tag1", "tag2"));
+        poly.put("tomato", "potato");
+
 
         sqLiteStorage.persist("main", poly);
+
+        Optional<Poly> fetchById = sqLiteStorage.fetchById("main", "test");
+        assertThat(fetchById.isPresent(), is(true));
+
+        assertThat(fetchById.get()._id(), is("test"));
+        Poly polyById = fetchById.get();
+
+        assertThat(polyById.fetch("tomato"), is("potato"));
+        assertThat(polyById.fetch("randomText"), is(nullValue()));
+
+        List<String> tags = polyById.fetch(EmbeddedPolyConstants.TAGS_KEY);
+        assertThat(tags, is(notNullValue()));
+        assertThat(tags.contains("tag1"), is(true));
     }
 
 //
